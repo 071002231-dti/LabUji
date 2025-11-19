@@ -1,0 +1,52 @@
+
+export enum UserRole {
+  ADMIN = 'admin',
+  PETUGAS_LAB = 'petugas_lab',
+  ANALIS = 'analis',
+  CUSTOMER = 'customer',
+}
+
+export enum RequestStatus {
+  PENDING = 'Menunggu Persetujuan',
+  RECEIVED = 'Sampel Diterima',
+  IN_PROGRESS = 'Sedang Diuji',
+  COMPLETED = 'Selesai',
+  DELIVERED = 'Hasil Dikirim',
+}
+
+export interface Lab {
+  id: number;
+  name: string;
+  code: string;
+  description: string;
+  iconName: string;
+}
+
+export interface TestRequest {
+  id: string;
+  customerName: string;
+  labId: number;
+  labName: string;
+  testType: string;
+  dateSubmitted: string;
+  status: RequestStatus;
+  expiryDate?: string;
+}
+
+export interface User {
+  id: number;
+  name: string;
+  role: UserRole;
+  email: string;
+  labId?: number; // Menambahkan Lab ID untuk staff
+  avatar?: string; // Untuk foto profil Google
+  googleId?: string; // ID dari Google Auth
+}
+
+export interface StatMetric {
+  label: string;
+  value: string | number;
+  trend?: string;
+  trendUp?: boolean;
+  iconName: string;
+}

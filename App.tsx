@@ -1,0 +1,178 @@
+
+import React, { useState, useRef, useEffect } from 'react';
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Sidebar } from './components/Sidebar';
+import { Dashboard } from './pages/Dashboard';
+import { NewRequest } from './pages/NewRequest';
+import { RequestList } from './pages/RequestList';
+import { Login } from './pages/Login';
+import { UserRole, User } from './types';
+import { Bell, Check, Info, AlertTriangle, X } from 'lucide-react';
+import { LABS } from './constants';
+
+// Mock Data Notifikasi
+const MOCK_NOTIFICATIONS = [
+  {
+    id: 1,
+    title: 'Permintaan Baru Masuk',
+    message: 'PT. Tekstil Maju Jaya mengirimkan sampel baru.',
+    time: '5 menit yang lalu',
+    type: 'info',
+    read: false,
+  },
+  {
+    id: 2,
+    title: 'Hasil Uji Selesai',
+    message: 'Pengujian REQ-202511-003 telah divalidasi.',
+    time: '1 jam yang lalu',
+    type: 'success',
+    read: false,
+  },
+  {
+    id: 3,
+    title: 'Peringatan Expired',
+    message: 'Sampel #SMP-998 akan kadaluarsa dalam 3 hari.',
+    time: 'Kemarin',
+    type: 'warning',
+    read: true,
+  },
+];
+
+const App: React.FC = () => {
+  const [user, setUser] = useState<User | null>(null);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const notifRef = useRef<HTMLDivElement>(null);
+
+  // Handle click outside notification
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
+        setIsNotifOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [notifRef]);
+
+  // Updated Login Handler to receive full User object from Auth Service
+  const handleLogin = (userData: User) => {
+    setUser(userData);
+    // In a real app, you would store the auth token in localStorage here
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+  };
+
+  if (!user) {
+    return <Login onLogin={handleLogin} />;
+  }
+
+  const unreadCount = MOCK_NOTIFICATIONS.filter(n => !n.read).length;
+
+  return (
+    <Router>
+      <div className="flex min-h-screen bg-slate-50 font-sans">
+        <Sidebar userRole={user.role} onLogout={handleLogout} />
+        
+        <main className="flex-1 ml-64 p-8">
+          {/* Top Header - Updated: Search Removed, Notifications Activated */}
+          <header className="flex justify-end items-center mb-8 relative z-20">
+            
+            <div className="flex items-center gap-4">
+              {/* Notification Bell */}
+              <div className="relative" ref={notifRef}>
+                <button 
+                  onClick={() => setIsNotifOpen(!isNotifOpen)}
+                  className={`relative p-2 rounded-full border transition-colors ${isNotifOpen ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-white border-gray-200 hover:bg-gray-50 text-slate-600'}`}
+                >
+                  <Bell size={20} />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+                  )}
+                </button>
+
+                {/* Notification Dropdown */}
+                {isNotifOpen && (
+                  <div className="absolute right-0 mt-3 w-80 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 origin-top-right">
+                    <div className="px-4 py-3 border-b border-gray-50 flex justify-between items-center bg-slate-50/50">
+                      <h3 className="font-semibold text-slate-800 text-sm">Notifikasi</h3>
+                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">{unreadCount} Baru</span>
+                    </div>
+                    <div className="max-h-96 overflow-y-auto">
+                      {MOCK_NOTIFICATIONS.map((notif) => (
+                        <div key={notif.id} className={`p-4 border-b border-gray-50 hover:bg-slate-50 transition-colors cursor-pointer relative ${!notif.read ? 'bg-blue-50/30' : ''}`}>
+                          <div className="flex gap-3">
+                            <div className={`mt-1 p-1.5 rounded-full h-fit ${
+                              notif.type === 'success' ? 'bg-green-100 text-green-600' :
+                              notif.type === 'warning' ? 'bg-orange-100 text-orange-600' :
+                              'bg-blue-100 text-blue-600'
+                            }`}>
+                              {notif.type === 'success' ? <Check size={14} /> :
+                               notif.type === 'warning' ? <AlertTriangle size={14} /> :
+                               <Info size={14} />}
+                            </div>
+                            <div>
+                              <p className={`text-sm ${!notif.read ? 'font-semibold text-slate-800' : 'font-medium text-slate-600'}`}>
+                                {notif.title}
+                              </p>
+                              <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                                {notif.message}
+                              </p>
+                              <p className="text-[10px] text-slate-400 mt-2 font-medium uppercase tracking-wide">
+                                {notif.time}
+                              </p>
+                            </div>
+                            {!notif.read && (
+                              <div className="absolute right-4 top-5 w-2 h-2 bg-blue-500 rounded-full"></div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="p-2 text-center border-t border-gray-50 bg-slate-50/50">
+                      <button className="text-xs font-medium text-blue-600 hover:text-blue-800 py-1">
+                        Tandai semua sudah dibaca
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* User Profile */}
+              <div className="flex items-center gap-3 pl-4 border-l border-gray-200">
+                <div className="text-right hidden md:block">
+                  <p className="text-sm font-bold text-slate-800">{user.name}</p>
+                  <p className="text-xs text-slate-500 capitalize">
+                     {user.role.replace('_', ' ')} 
+                     {user.labId && ` - ${LABS.find(l => l.id === user.labId)?.code}`}
+                  </p>
+                </div>
+                {user.avatar ? (
+                  <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full border border-gray-200 shadow-md" />
+                ) : (
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-white font-bold shadow-md">
+                    {user.name.charAt(0)}
+                  </div>
+                )}
+              </div>
+            </div>
+          </header>
+
+          <Routes>
+            <Route path="/dashboard" element={<Dashboard user={user} />} />
+            <Route path="/request/new" element={<NewRequest />} />
+            {/* Pass user prop to RequestList for filtering */}
+            <Route path="/requests" element={<RequestList user={user} />} />
+            <Route path="/settings" element={<div className="text-slate-500">Halaman Pengaturan (Coming Soon)</div>} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </main>
+      </div>
+    </Router>
+  );
+};
+
+export default App;
