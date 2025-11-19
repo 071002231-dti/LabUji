@@ -1,6 +1,9 @@
+
 import React, { useState, useRef } from 'react';
 import { LABS } from '../constants';
-import { Beaker, Scissors, Binary, Upload, Check, X, Image as ImageIcon, ChevronDown } from 'lucide-react';
+import { Beaker, Scissors, Binary, Upload, Check, X, Image as ImageIcon, ChevronDown, RefreshCw, Loader2 } from 'lucide-react';
+import { DataService } from '../services/database';
+import { RequestStatus, User, TestRequest } from '../types';
 
 // Definisi 7 Jenis Pengujian sesuai Lab untuk Dropdown
 const LAB_TEST_TYPES: Record<number, string[]> = {
@@ -19,10 +22,15 @@ const LAB_TEST_TYPES: Record<number, string[]> = {
   ]
 };
 
-export const NewRequest: React.FC = () => {
+interface NewRequestProps {
+  user: User;
+}
+
+export const NewRequest: React.FC<NewRequestProps> = ({ user }) => {
   const [selectedLab, setSelectedLab] = useState<number | null>(null);
   const [formStep, setFormStep] = useState(1);
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Form State
   const [sampleName, setSampleName] = useState('');
@@ -37,22 +45,78 @@ export const NewRequest: React.FC = () => {
   const handleLabSelect = (id: number) => {
     setSelectedLab(id);
     setSelectedTestType(''); // Reset jenis uji saat ganti lab
+    setSampleName(''); // Reset nama sampel
     setFormStep(2);
+  };
+
+  // Fungsi Generator Kode Sampel Otomatis
+  const generateSampleCode = (testType: string) => {
+    if (!testType) return '';
+
+    // 1. Ambil inisial huruf depan dari jenis pengujian (Misal: Pengujian Kadar Air -> PKA)
+    const initials = testType
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase();
+
+    // 2. Format Tanggal (YYMMDD)
+    const now = new Date();
+    const dateStr = now.toISOString().slice(2, 10).replace(/-/g, '');
+
+    // 3. Urutan Random (Simulasi database auto-increment)
+    const randomSeq = Math.floor(100 + Math.random() * 900);
+
+    return `${initials}-${dateStr}-${randomSeq}`;
+  };
+
+  const handleTestTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const type = e.target.value;
+    setSelectedTestType(type);
+    
+    // Generate kode otomatis saat jenis pengujian dipilih
+    const newCode = generateSampleCode(type);
+    setSampleName(newCode);
   };
 
   const handleStep2Submit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!sampleName || !selectedTestType) {
-      alert('Mohon lengkapi nama sampel dan jenis pengujian.');
+    if (!selectedTestType) {
+      alert('Mohon pilih jenis pengujian.');
       return;
     }
     setFormStep(3);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
-    // Simulasi pengiriman data ke backend
+    setIsSubmitting(true);
+
+    // Generate Request ID
+    const reqId = `REQ-${new Date().getFullYear()}${new Date().getMonth() + 1}-${Math.floor(100 + Math.random() * 900)}`;
+    const labName = LABS.find(l => l.id === selectedLab)?.name || '';
+
+    const newRequest: TestRequest = {
+      id: reqId,
+      userId: user.id,
+      customerName: user.name,
+      labId: selectedLab!,
+      labName: labName,
+      testType: selectedTestType,
+      dateSubmitted: new Date().toISOString().slice(0, 10),
+      status: RequestStatus.PENDING,
+      sampleName: sampleName,
+      description: description,
+    };
+
+    try {
+      await DataService.addRequest(newRequest);
+      setSubmitted(true);
+    } catch (error) {
+      alert('Gagal mengirim permintaan. Silakan coba lagi.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const resetForm = () => {
@@ -121,15 +185,18 @@ export const NewRequest: React.FC = () => {
 
   if (submitted) {
     return (
-      <div className="max-w-2xl mx-auto bg-white p-12 rounded-2xl shadow-sm border border-gray-100 text-center">
-        <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+      <div className="max-w-2xl mx-auto bg-white p-12 rounded-2xl shadow-sm border border-gray-100 text-center animate-in zoom-in-95 duration-300">
+        <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
           <Check size={40} />
         </div>
         <h2 className="text-2xl font-bold text-slate-800 mb-2">Permintaan Berhasil Dikirim!</h2>
-        <p className="text-slate-500 mb-8">Nomor tiket Anda: <span className="font-mono font-bold text-slate-900">REQ-202511-099</span>. Tim kami akan segera memverifikasi sampel Anda.</p>
+        <p className="text-slate-500 mb-8">
+            Kode Sampel: <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2 py-1 rounded mx-1 border border-slate-200">{sampleName}</span><br/>
+            Tim kami akan segera memverifikasi sampel Anda.
+        </p>
         <button 
           onClick={resetForm}
-          className="px-6 py-2 bg-uii-blue text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="px-6 py-2 bg-uii-blue text-white rounded-lg hover:bg-blue-700 transition-colors shadow-md"
         >
           Buat Permintaan Baru
         </button>
@@ -146,15 +213,15 @@ export const NewRequest: React.FC = () => {
 
       {/* Progress Steps */}
       <div className="flex items-center mb-8 max-w-2xl">
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${formStep >= 1 ? 'bg-uii-blue text-white' : 'bg-slate-200 text-slate-500'}`}>1</div>
-        <div className={`flex-1 h-1 mx-2 ${formStep >= 2 ? 'bg-uii-blue' : 'bg-slate-200'}`}></div>
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${formStep >= 2 ? 'bg-uii-blue text-white' : 'bg-slate-200 text-slate-500'}`}>2</div>
-        <div className={`flex-1 h-1 mx-2 ${formStep >= 3 ? 'bg-uii-blue' : 'bg-slate-200'}`}></div>
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${formStep >= 3 ? 'bg-uii-blue text-white' : 'bg-slate-200 text-slate-500'}`}>3</div>
+        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors duration-300 ${formStep >= 1 ? 'bg-uii-blue text-white' : 'bg-slate-200 text-slate-500'}`}>1</div>
+        <div className={`flex-1 h-1 mx-2 transition-colors duration-300 ${formStep >= 2 ? 'bg-uii-blue' : 'bg-slate-200'}`}></div>
+        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors duration-300 ${formStep >= 2 ? 'bg-uii-blue text-white' : 'bg-slate-200 text-slate-500'}`}>2</div>
+        <div className={`flex-1 h-1 mx-2 transition-colors duration-300 ${formStep >= 3 ? 'bg-uii-blue' : 'bg-slate-200'}`}></div>
+        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors duration-300 ${formStep >= 3 ? 'bg-uii-blue text-white' : 'bg-slate-200 text-slate-500'}`}>3</div>
       </div>
 
       {formStep === 1 && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in duration-300">
           {LABS.map((lab) => {
             const Icon = lab.iconName === 'Scissors' ? Scissors : lab.iconName === 'Binary' ? Binary : Beaker;
             return (
@@ -179,39 +246,28 @@ export const NewRequest: React.FC = () => {
       )}
 
       {formStep === 2 && (
-        <form onSubmit={handleStep2Submit} className="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+        <form onSubmit={handleStep2Submit} className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 animate-in fade-in slide-in-from-right-4 duration-300">
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-slate-800 mb-1">
               Detail Sampel - {LABS.find(l => l.id === selectedLab)?.name}
             </h3>
-            <p className="text-sm text-slate-500">Isi informasi sampel yang akan diuji.</p>
+            <p className="text-sm text-slate-500">Isi jenis pengujian dan deskripsi. Kode sampel akan dibuat otomatis.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
             
-            {/* Kiri: Input Nama & Deskripsi */}
+            {/* Kiri: Input Jenis Uji & Nama (Auto) */}
             <div className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">Nama/Kode Sampel <span className="text-red-500">*</span></label>
-                <input 
-                  type="text" 
-                  required 
-                  value={sampleName}
-                  onChange={(e) => setSampleName(e.target.value)}
-                  className="w-full px-4 py-3 bg-white text-slate-800 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all placeholder-slate-400" 
-                  placeholder="Contoh: Kain Cotton Combed 30s" 
-                />
-              </div>
-
-              {/* Dropdown Jenis Pengujian (Dikembalikan ke Dropdown) */}
+              
+              {/* Dropdown Jenis Pengujian */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-700">Jenis Pengujian <span className="text-red-500">*</span></label>
                 <div className="relative">
                   <select
                     required
                     value={selectedTestType}
-                    onChange={(e) => setSelectedTestType(e.target.value)}
-                    className="w-full px-4 py-3 bg-white text-slate-800 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all appearance-none cursor-pointer"
+                    onChange={handleTestTypeChange}
+                    className="w-full px-4 py-3 bg-white text-slate-800 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all appearance-none cursor-pointer shadow-sm"
                   >
                     <option value="" disabled>Pilih jenis pengujian...</option>
                     {selectedLab && LAB_TEST_TYPES[selectedLab].map((type) => (
@@ -221,15 +277,36 @@ export const NewRequest: React.FC = () => {
                   <ChevronDown size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
                 </div>
               </div>
+
+              {/* Nama Sampel Otomatis */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700 flex items-center justify-between">
+                    <span>Kode Sampel (Otomatis)</span>
+                    {sampleName && <span className="text-xs text-green-600 font-normal bg-green-50 px-2 py-0.5 rounded border border-green-100">Tergenerate</span>}
+                </label>
+                <div className="relative">
+                    <input 
+                    type="text" 
+                    readOnly 
+                    value={sampleName}
+                    className="w-full px-4 py-3 bg-slate-100 text-slate-600 font-mono font-medium border border-gray-200 rounded-lg focus:outline-none cursor-not-allowed" 
+                    placeholder="Pilih jenis pengujian terlebih dahulu..." 
+                    />
+                    {sampleName && <RefreshCw size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />}
+                </div>
+                <p className="text-xs text-slate-400">Kode unik ini akan digunakan untuk pelabelan sampel.</p>
+              </div>
+
             </div>
             
             {/* Kanan: Deskripsi */}
              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">Deskripsi Tambahan</label>
+                <label className="text-sm font-medium text-slate-700">Deskripsi Sampel <span className="text-red-500">*</span></label>
                 <textarea 
+                  required
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full px-4 py-3 bg-white text-slate-800 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none h-40 resize-none placeholder-slate-400" 
+                  className="w-full px-4 py-3 bg-white text-slate-800 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none h-40 resize-none placeholder-slate-400 shadow-sm" 
                   placeholder="Jelaskan kondisi sampel, instruksi khusus, atau detail lainnya..."
                 ></textarea>
               </div>
@@ -255,7 +332,7 @@ export const NewRequest: React.FC = () => {
       )}
 
       {formStep === 3 && (
-        <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+        <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 animate-in fade-in slide-in-from-right-4 duration-300">
            <div className="mb-6">
             <h3 className="text-lg font-semibold text-slate-800 mb-1">Upload Foto Sampel</h3>
             <p className="text-sm text-slate-500">Unggah foto kondisi awal sampel untuk dokumentasi.</p>
@@ -314,20 +391,25 @@ export const NewRequest: React.FC = () => {
             <button 
               type="button" 
               onClick={() => setFormStep(2)}
+              disabled={isSubmitting}
               className="px-6 py-2 text-slate-600 font-medium hover:bg-slate-50 rounded-lg transition-colors"
             >
               Kembali
             </button>
             <button 
               onClick={handleSubmit}
-              disabled={!selectedFile}
-              className={`px-6 py-2 font-medium rounded-lg transition-colors shadow-lg ${
-                selectedFile 
+              disabled={!selectedFile || isSubmitting}
+              className={`px-6 py-2 font-medium rounded-lg transition-colors shadow-lg flex items-center gap-2 ${
+                selectedFile && !isSubmitting
                   ? 'bg-uii-blue text-white hover:bg-blue-700 shadow-blue-200' 
                   : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
               }`}
             >
-              Kirim Permintaan
+              {isSubmitting ? (
+                <><Loader2 size={20} className="animate-spin" /> Mengirim...</>
+              ) : (
+                'Kirim Permintaan'
+              )}
             </button>
           </div>
         </div>

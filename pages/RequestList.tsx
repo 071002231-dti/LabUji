@@ -1,14 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MOCK_REQUESTS, LABS } from '../constants';
+import { LABS } from '../constants';
+import { DataService } from '../services/database';
 import { StatusBadge } from '../components/StatusBadge';
 import { RequestStatus, User, UserRole, TestRequest } from '../types';
-import { Search, Filter, Download, FileSpreadsheet, FileText, ChevronDown, X, Eye, Calendar, FlaskConical } from 'lucide-react';
+import { Search, Filter, Download, FileSpreadsheet, FileText, ChevronDown, X, Eye, Calendar, FlaskConical, Loader2 } from 'lucide-react';
 
 interface RequestListProps {
   user: User;
 }
 
 export const RequestList: React.FC<RequestListProps> = ({ user }) => {
+  const [requests, setRequests] = useState<TestRequest[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const exportDropdownRef = useRef<HTMLDivElement>(null);
@@ -20,6 +24,22 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
   // Filter States
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<RequestStatus | 'ALL'>('ALL');
+
+  // Fetch Data on Mount
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const data = await DataService.getRequests();
+        setRequests(data);
+      } catch (error) {
+        console.error("Failed to fetch requests", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   // Handle click outside to close dropdowns
   useEffect(() => {
@@ -43,7 +63,7 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
   };
 
   // --- Logic Pemfilteran ---
-  const filteredRequests = MOCK_REQUESTS.filter((req) => {
+  const filteredRequests = requests.filter((req) => {
     // 1. Filter berdasarkan Lab User (Jika user adalah Staff/Analis)
     const isStaff = user.role === UserRole.PETUGAS_LAB || user.role === UserRole.ANALIS;
     if (isStaff && user.labId) {
@@ -215,7 +235,14 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {filteredRequests.length > 0 ? (
+            {isLoading ? (
+              <tr>
+                <td colSpan={6} className="text-center py-12 text-slate-500">
+                  <Loader2 className="mx-auto animate-spin mb-2" size={24} />
+                  Memuat data...
+                </td>
+              </tr>
+            ) : filteredRequests.length > 0 ? (
               filteredRequests.map((req) => (
                 <tr key={req.id} className="hover:bg-slate-50 transition-colors">
                   <td className="px-6 py-4 font-mono font-medium text-slate-700">{req.id}</td>
@@ -260,7 +287,7 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
         </table>
       </div>
       <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-between items-center text-sm text-slate-500">
-        <span>Menampilkan {filteredRequests.length} dari {MOCK_REQUESTS.length} data</span>
+        <span>Menampilkan {filteredRequests.length} dari {requests.length} data</span>
         <div className="flex gap-2">
           <button className="px-3 py-1 border border-gray-300 rounded bg-white disabled:opacity-50" disabled>Previous</button>
           <button className="px-3 py-1 border border-gray-300 rounded bg-white hover:bg-gray-50">Next</button>

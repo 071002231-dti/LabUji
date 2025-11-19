@@ -9,11 +9,12 @@ import { UserRole, User } from './types';
 import { Bell, Check, Info, AlertTriangle, X } from 'lucide-react';
 import { LABS } from './constants';
 
-// Mock Data Notifikasi (Updated with userId)
+// Mock Data Notifikasi (Updated with userId and labId)
 const MOCK_NOTIFICATIONS = [
   {
     id: 1,
-    userId: 101, // Not for Demo Customer
+    userId: null, // General notification for the lab team
+    labId: 1, // LAB TEKSTIL ONLY
     title: 'Permintaan Baru Masuk',
     message: 'PT. Tekstil Maju Jaya mengirimkan sampel baru.',
     time: '5 menit yang lalu',
@@ -22,7 +23,8 @@ const MOCK_NOTIFICATIONS = [
   },
   {
     id: 2,
-    userId: 999, // FOR DEMO CUSTOMER
+    userId: 999, // SPECIFIC CUSTOMER (Budi)
+    labId: null,
     title: 'Hasil Uji Selesai',
     message: 'Pengujian REQ-202511-005 telah divalidasi.',
     time: '1 jam yang lalu',
@@ -31,7 +33,8 @@ const MOCK_NOTIFICATIONS = [
   },
   {
     id: 3,
-    userId: 999, // FOR DEMO CUSTOMER
+    userId: 999, // SPECIFIC CUSTOMER (Budi)
+    labId: null,
     title: 'Status Berubah',
     message: 'Sampel REQ-202511-004 telah diterima lab.',
     time: 'Kemarin',
@@ -40,13 +43,34 @@ const MOCK_NOTIFICATIONS = [
   },
   {
     id: 4,
-    userId: 102,
+    userId: null, 
+    labId: 2, // LAB KIMIA ONLY
     title: 'Peringatan Expired',
-    message: 'Sampel #SMP-998 akan kadaluarsa.',
+    message: 'Sampel #SMP-998 (Tanah Liat) akan kadaluarsa besok.',
     time: 'Kemarin',
     type: 'warning',
     read: true,
   },
+  {
+    id: 5,
+    userId: null,
+    labId: 3, // LAB FORENSIK ONLY
+    title: 'Barang Bukti Diterima',
+    message: 'Harddisk WD Blue (REQ-006) siap untuk imaging.',
+    time: '2 jam yang lalu',
+    type: 'info',
+    read: false,
+  },
+  {
+    id: 6,
+    userId: null,
+    labId: 1, // LAB TEKSTIL ONLY
+    title: 'Kalibrasi Alat',
+    message: 'Alat uji tarik benang perlu kalibrasi mingguan.',
+    time: 'Hari ini',
+    type: 'warning',
+    read: false,
+  }
 ];
 
 const App: React.FC = () => {
@@ -81,15 +105,29 @@ const App: React.FC = () => {
     return <Login onLogin={handleLogin} />;
   }
 
-  // FILTER NOTIFICATIONS FOR CURRENT USER
+  // FILTER NOTIFICATIONS BASED ON ROLE & LAB ID
   const userNotifications = MOCK_NOTIFICATIONS.filter(n => {
-    // If admin/staff, maybe show all internal notifs? 
-    // For now let's strictly filter by userId for customers
+    // 1. CUSTOMER: Hanya melihat notifikasi miliknya sendiri (berdasarkan userId)
     if (user.role === UserRole.CUSTOMER) {
       return n.userId === user.id;
     }
-    // For staff/admin, show notifs that are NOT specific to other customers (or logic as needed)
-    return n.userId !== 999; // Show internal notifs
+
+    // 2. STAFF (Petugas/Analis):
+    // - Melihat notifikasi yang ditujukan ke Lab mereka (labId match)
+    // - ATAU notifikasi personal (userId match)
+    if (user.role === UserRole.PETUGAS_LAB || user.role === UserRole.ANALIS) {
+      return n.labId === user.labId || n.userId === user.id;
+    }
+
+    // 3. ADMIN:
+    // - Melihat semua notifikasi operasional Lab (yang punya labId)
+    // - Melihat notifikasi personal admin (jika ada)
+    // - (Biasanya Admin tidak perlu melihat notifikasi privat customer seperti 'Hasil Selesai', tapi bisa melihat alert sistem)
+    if (user.role === UserRole.ADMIN) {
+      return n.labId !== null || n.userId === user.id;
+    }
+
+    return false;
   });
 
   const unreadCount = userNotifications.filter(n => !n.read).length;
@@ -187,8 +225,8 @@ const App: React.FC = () => {
 
           <Routes>
             <Route path="/dashboard" element={<Dashboard user={user} />} />
-            <Route path="/request/new" element={<NewRequest />} />
-            {/* Pass user prop to RequestList for filtering */}
+            {/* PASS USER PROP HERE */}
+            <Route path="/request/new" element={<NewRequest user={user} />} />
             <Route path="/requests" element={<RequestList user={user} />} />
             <Route path="/settings" element={<div className="text-slate-500">Halaman Pengaturan (Coming Soon)</div>} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />

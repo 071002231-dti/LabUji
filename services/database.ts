@@ -1,12 +1,15 @@
 import { User, UserRole, TestRequest } from '../types';
-import { MOCK_REQUESTS } from '../constants';
+import { MOCK_REQUESTS as INITIAL_MOCK_REQUESTS } from '../constants';
 
 // KONFIGURASI KONEKSI BACKEND
 // Ubah ke 'false' jika Backend Laravel sudah siap berjalan di http://localhost:8000
 const USE_MOCK_DATA = true; 
 const API_BASE_URL = 'http://localhost:8000/api';
 
-// --- MOCK DATA (FALLBACK) ---
+// --- IN-MEMORY STORAGE (Untuk simulasi penambahan data tanpa backend) ---
+// Kita copy data dari constants agar bisa dimodifikasi (mutable) selama sesi berjalan
+let currentRequests: TestRequest[] = [...INITIAL_MOCK_REQUESTS];
+
 const SEED_USERS: any[] = [
   // --- ADMIN ---
   {
@@ -147,9 +150,6 @@ export const AuthService = {
         }, 1500);
       });
     } else {
-      // REAL API MODE
-      // Pada implementasi nyata, ini biasanya redirect ke URL Google OAuth
-      // Lalu callback akan mengirimkan token ke Backend Laravel
       throw new Error("Google Auth via API belum dikonfigurasi.");
     }
   }
@@ -160,14 +160,30 @@ export const DataService = {
   getRequests: async (token?: string): Promise<TestRequest[]> => {
     if (USE_MOCK_DATA) {
       return new Promise((resolve) => {
-        setTimeout(() => resolve(MOCK_REQUESTS), 500);
+        // Return variabel in-memory yang terbaru
+        setTimeout(() => resolve([...currentRequests]), 500);
       });
     } else {
       const response = await apiCall('/requests', 'GET', null, token);
       return response.data;
     }
+  },
+
+  // Menambah Request Baru
+  addRequest: async (newRequest: TestRequest, token?: string): Promise<TestRequest> => {
+    if (USE_MOCK_DATA) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          // Tambahkan ke array in-memory (unshift agar paling atas)
+          currentRequests.unshift(newRequest);
+          resolve(newRequest);
+        }, 800);
+      });
+    } else {
+      const response = await apiCall('/requests', 'POST', newRequest, token);
+      return response.data;
+    }
   }
 };
 
-// Helper untuk mendapatkan list user dummy agar mudah dicoba saat demo
 export const getDemoAccounts = () => SEED_USERS;
