@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { LABS } from '../constants';
 import { Beaker, Scissors, Binary, Upload, Check, X, Image as ImageIcon } from 'lucide-react';

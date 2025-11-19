@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { UserRole, User } from '../types';
 import { AuthService, getDemoAccounts } from '../services/database';

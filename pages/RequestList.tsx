@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { MOCK_REQUESTS, LABS } from '../constants';
 import { StatusBadge } from '../components/StatusBadge';

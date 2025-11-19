@@ -1,5 +1,4 @@
 import { Lab, RequestStatus, TestRequest, UserRole, StatMetric } from './types';
-import { Beaker, Binary, Scissors } from 'lucide-react';
 
 export const LABS: Lab[] = [
   {

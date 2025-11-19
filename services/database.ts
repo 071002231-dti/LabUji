@@ -1,8 +1,12 @@
+import { User, UserRole, TestRequest } from '../types';
+import { MOCK_REQUESTS } from '../constants';
 
-import { User, UserRole } from '../types';
+// KONFIGURASI KONEKSI BACKEND
+// Ubah ke 'false' jika Backend Laravel sudah siap berjalan di http://localhost:8000
+const USE_MOCK_DATA = true; 
+const API_BASE_URL = 'http://localhost:8000/api';
 
-// Simulasi Tabel 'users' dalam Database SQLite
-// Password default untuk semua akun simulasi: '123456'
+// --- MOCK DATA (FALLBACK) ---
 const SEED_USERS: any[] = [
   // --- ADMIN ---
   {
@@ -66,41 +70,102 @@ const SEED_USERS: any[] = [
   }
 ];
 
-// Service Class untuk berinteraksi dengan "Database"
+// --- API CLIENT HELPER ---
+async function apiCall(endpoint: string, method: string = 'GET', body?: any, token?: string) {
+  const headers: any = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const config: RequestInit = {
+    method,
+    headers,
+  };
+
+  if (body) {
+    config.body = JSON.stringify(body);
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Terjadi kesalahan pada server');
+    }
+    return data;
+  } catch (error: any) {
+    throw new Error(error.message || 'Gagal terhubung ke server');
+  }
+}
+
+// --- SERVICE METHODS ---
 export const AuthService = {
-  // Login Internal (Staff/Admin) - Simulasi Query: SELECT * FROM users WHERE email = ? AND password = ?
-  loginInternal: (email: string, password: string): Promise<User> => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        const user = SEED_USERS.find(u => u.email === email && u.password === password);
-        
-        if (user) {
-          // Return user object tanpa password
-          const { password, ...userData } = user;
-          resolve(userData as User);
-        } else {
-          reject(new Error('Email atau password salah.'));
-        }
-      }, 800); // Simulasi delay network
-    });
+  // Login Internal (Staff/Admin)
+  loginInternal: async (email: string, password: string): Promise<User> => {
+    if (USE_MOCK_DATA) {
+      // MOCK MODE
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          const user = SEED_USERS.find(u => u.email === email && u.password === password);
+          if (user) {
+            const { password, ...userData } = user;
+            resolve(userData as User);
+          } else {
+            reject(new Error('Email atau password salah (Mock).'));
+          }
+        }, 800);
+      });
+    } else {
+      // REAL API MODE (LARAVEL)
+      const response = await apiCall('/login', 'POST', { email, password });
+      // Simpan token di localStorage jika perlu
+      localStorage.setItem('auth_token', response.access_token);
+      return response.user;
+    }
   },
 
-  // Login Google (Customer) - Simulasi OAuth
-  loginGoogle: (): Promise<User> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // Simulasi data yang diterima dari Google API
-        const googleUser: User = {
-          id: Date.now(), // Random ID
-          name: 'Budi Santoso', // Nama dari akun Google
-          email: 'budi.santoso@gmail.com',
-          role: UserRole.CUSTOMER,
-          avatar: 'https://lh3.googleusercontent.com/a/default-user=s96-c', // Default google avatar
-          googleId: 'google-123456789'
-        };
-        resolve(googleUser);
-      }, 1500); // Simulasi loading popup Google
-    });
+  // Login Google (Customer)
+  loginGoogle: async (): Promise<User> => {
+    if (USE_MOCK_DATA) {
+      // MOCK MODE
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          const googleUser: User = {
+            id: Date.now(),
+            name: 'Budi Santoso',
+            email: 'budi.santoso@gmail.com',
+            role: UserRole.CUSTOMER,
+            avatar: 'https://lh3.googleusercontent.com/a/default-user=s96-c',
+            googleId: 'google-123456789'
+          };
+          resolve(googleUser);
+        }, 1500);
+      });
+    } else {
+      // REAL API MODE
+      // Pada implementasi nyata, ini biasanya redirect ke URL Google OAuth
+      // Lalu callback akan mengirimkan token ke Backend Laravel
+      throw new Error("Google Auth via API belum dikonfigurasi.");
+    }
+  }
+};
+
+export const DataService = {
+  // Mengambil Data Request
+  getRequests: async (token?: string): Promise<TestRequest[]> => {
+    if (USE_MOCK_DATA) {
+      return new Promise((resolve) => {
+        setTimeout(() => resolve(MOCK_REQUESTS), 500);
+      });
+    } else {
+      const response = await apiCall('/requests', 'GET', null, token);
+      return response.data;
+    }
   }
 };
 
