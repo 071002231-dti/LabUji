@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MOCK_REQUESTS, LABS } from '../constants';
 import { StatusBadge } from '../components/StatusBadge';
-import { RequestStatus, User, UserRole } from '../types';
-import { Search, Filter, Download, FileSpreadsheet, FileText, ChevronDown, X } from 'lucide-react';
+import { RequestStatus, User, UserRole, TestRequest } from '../types';
+import { Search, Filter, Download, FileSpreadsheet, FileText, ChevronDown, X, Eye, Calendar, FlaskConical } from 'lucide-react';
 
 interface RequestListProps {
   user: User;
@@ -13,6 +13,9 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const exportDropdownRef = useRef<HTMLDivElement>(null);
   const filterDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Detail Modal State
+  const [selectedRequest, setSelectedRequest] = useState<TestRequest | null>(null);
 
   // Filter States
   const [searchQuery, setSearchQuery] = useState('');
@@ -42,13 +45,17 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
   // --- Logic Pemfilteran ---
   const filteredRequests = MOCK_REQUESTS.filter((req) => {
     // 1. Filter berdasarkan Lab User (Jika user adalah Staff/Analis)
-    // Jika Admin atau Customer, bisa melihat semua (atau logic customer bisa melihat miliknya sendiri)
     const isStaff = user.role === UserRole.PETUGAS_LAB || user.role === UserRole.ANALIS;
     if (isStaff && user.labId) {
       if (req.labId !== user.labId) return false;
     }
 
-    // 2. Filter berdasarkan Search Query (No Request, Customer, atau Tipe Uji)
+    // 2. Filter Khusus Customer (Hanya lihat data miliknya)
+    if (user.role === UserRole.CUSTOMER) {
+        if (req.userId !== user.id) return false;
+    }
+
+    // 3. Filter berdasarkan Search Query (No Request, Customer, atau Tipe Uji)
     const query = searchQuery.toLowerCase();
     const matchesSearch = 
       req.id.toLowerCase().includes(query) ||
@@ -57,7 +64,7 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
     
     if (!matchesSearch) return false;
 
-    // 3. Filter berdasarkan Status Dropdown
+    // 4. Filter berdasarkan Status Dropdown
     if (statusFilter !== 'ALL' && req.status !== statusFilter) return false;
 
     return true;
@@ -72,14 +79,17 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
   const showLabName = !user.labId;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden min-h-[600px] flex flex-col">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden min-h-[600px] flex flex-col relative">
       <div className="p-6 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-slate-800">Data Pengujian</h2>
           <p className="text-sm text-slate-500">
-            {user.labId 
-              ? `Daftar permintaan untuk ${LABS.find(l => l.id === user.labId)?.name}`
-              : 'Daftar seluruh permintaan uji lab.'}
+            {user.role === UserRole.CUSTOMER 
+              ? 'Daftar riwayat permintaan pengujian Anda.'
+              : user.labId 
+                ? `Daftar permintaan untuk ${LABS.find(l => l.id === user.labId)?.name}`
+                : 'Daftar seluruh permintaan uji lab.'
+            }
           </p>
         </div>
         
@@ -91,7 +101,7 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
               type="text" 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari No. Request / Customer..." 
+              placeholder="Cari No. Request / Jenis Uji..." 
               className="pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white focus:border-blue-500 w-72 transition-all shadow-sm"
             />
             {searchQuery && (
@@ -197,7 +207,7 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
           <thead className="bg-slate-50 text-slate-500 font-medium border-b border-gray-100">
             <tr>
               <th className="px-6 py-4">No. Request</th>
-              <th className="px-6 py-4">Customer</th>
+              {user.role !== UserRole.CUSTOMER && <th className="px-6 py-4">Customer</th>}
               <th className="px-6 py-4">Jenis Uji {showLabName ? '& Lab' : ''}</th>
               <th className="px-6 py-4">Tanggal Masuk</th>
               <th className="px-6 py-4">Status</th>
@@ -209,7 +219,7 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
               filteredRequests.map((req) => (
                 <tr key={req.id} className="hover:bg-slate-50 transition-colors">
                   <td className="px-6 py-4 font-mono font-medium text-slate-700">{req.id}</td>
-                  <td className="px-6 py-4 text-slate-600">{req.customerName}</td>
+                  {user.role !== UserRole.CUSTOMER && <td className="px-6 py-4 text-slate-600">{req.customerName}</td>}
                   <td className="px-6 py-4">
                     <div className="flex flex-col">
                        <span className="text-slate-800 font-medium">{req.testType}</span>
@@ -226,15 +236,18 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
                     )}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button className="text-blue-600 hover:text-blue-800 font-medium text-xs uppercase tracking-wide">
-                      Detail
+                    <button 
+                      onClick={() => setSelectedRequest(req)}
+                      className="text-blue-600 hover:text-blue-800 font-medium text-xs uppercase tracking-wide flex items-center gap-1 justify-end"
+                    >
+                      <Eye size={14} /> Detail
                     </button>
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={6} className="px-6 py-12 text-center text-slate-400">
+                <td colSpan={user.role === UserRole.CUSTOMER ? 5 : 6} className="px-6 py-12 text-center text-slate-400">
                   <div className="flex flex-col items-center justify-center">
                     <Search size={48} className="mb-4 opacity-20" />
                     <p>Tidak ada data yang ditemukan.</p>
@@ -253,6 +266,96 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
           <button className="px-3 py-1 border border-gray-300 rounded bg-white hover:bg-gray-50">Next</button>
         </div>
       </div>
+
+      {/* Detail Modal */}
+      {selectedRequest && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden relative animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-slate-50">
+              <div>
+                <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                  Detail Permintaan
+                  <span className="text-sm font-normal text-slate-500 font-mono bg-white px-2 py-0.5 border rounded">{selectedRequest.id}</span>
+                </h3>
+              </div>
+              <button 
+                onClick={() => setSelectedRequest(null)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-200 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              {/* Status & Lab Info */}
+              <div className="flex flex-col md:flex-row gap-4 justify-between items-start p-4 bg-blue-50 rounded-xl border border-blue-100">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-white rounded-lg text-blue-600 shadow-sm">
+                    <FlaskConical size={24} />
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 uppercase font-bold tracking-wide">Laboratorium</p>
+                    <p className="font-medium text-slate-800">{selectedRequest.labName}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                   <p className="text-xs text-slate-500 uppercase font-bold tracking-wide mb-1">Status Saat Ini</p>
+                   <StatusBadge status={selectedRequest.status} />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <p className="text-sm text-slate-500 mb-1">Nama Sampel</p>
+                  <p className="font-medium text-slate-800">{selectedRequest.sampleName || '-'}</p>
+                </div>
+                <div>
+                   <p className="text-sm text-slate-500 mb-1">Jenis Pengujian</p>
+                   <p className="font-medium text-slate-800">{selectedRequest.testType}</p>
+                </div>
+                <div>
+                   <p className="text-sm text-slate-500 mb-1">Tanggal Masuk</p>
+                   <div className="flex items-center gap-2 text-slate-800">
+                      <Calendar size={16} className="text-slate-400" />
+                      {selectedRequest.dateSubmitted}
+                   </div>
+                </div>
+                {selectedRequest.expiryDate && (
+                  <div>
+                    <p className="text-sm text-slate-500 mb-1">Berlaku Hingga</p>
+                    <p className="font-medium text-orange-600">{selectedRequest.expiryDate}</p>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                 <p className="text-sm text-slate-500 mb-1">Deskripsi / Catatan</p>
+                 <p className="text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-100 text-sm leading-relaxed">
+                   {selectedRequest.description || 'Tidak ada catatan tambahan.'}
+                 </p>
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-gray-100 bg-slate-50 flex justify-end gap-3">
+              <button 
+                onClick={() => setSelectedRequest(null)}
+                className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-white hover:text-slate-800 border border-transparent hover:border-gray-200 rounded-lg transition-all"
+              >
+                Tutup
+              </button>
+              {selectedRequest.status === RequestStatus.COMPLETED || selectedRequest.status === RequestStatus.DELIVERED ? (
+                <button className="px-4 py-2 text-sm font-medium bg-uii-blue text-white rounded-lg hover:bg-blue-700 shadow-sm flex items-center gap-2">
+                  <Download size={16} /> Download Hasil PDF
+                </button>
+              ) : (
+                <button disabled className="px-4 py-2 text-sm font-medium bg-slate-200 text-slate-400 rounded-lg cursor-not-allowed flex items-center gap-2">
+                  <Download size={16} /> Hasil Belum Tersedia
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

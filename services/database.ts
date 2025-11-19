@@ -136,7 +136,7 @@ export const AuthService = {
       return new Promise((resolve) => {
         setTimeout(() => {
           const googleUser: User = {
-            id: Date.now(),
+            id: 999, // Fixed ID untuk Demo Customer agar cocok dengan constants.ts
             name: 'Budi Santoso',
             email: 'budi.santoso@gmail.com',
             role: UserRole.CUSTOMER,

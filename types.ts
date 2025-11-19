@@ -18,11 +18,13 @@ export interface Lab {
   name: string;
   code: string;
   description: string;
+  services: string[]; // Added services list
   iconName: string;
 }
 
 export interface TestRequest {
   id: string;
+  userId: number; // Menambahkan User ID pemilik request
   customerName: string;
   labId: number;
   labName: string;
@@ -30,6 +32,8 @@ export interface TestRequest {
   dateSubmitted: string;
   status: RequestStatus;
   expiryDate?: string;
+  description?: string; // Deskripsi tambahan untuk detail
+  sampleName?: string; // Nama sampel untuk detail
 }
 
 export interface User {

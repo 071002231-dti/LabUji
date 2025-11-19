@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link, useNavigate } from 'react-router-dom'; // Added useNavigate/Link
 import { DASHBOARD_STATS, MOCK_REQUESTS } from '../constants';
 import { StatusBadge } from '../components/StatusBadge';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
@@ -24,6 +25,12 @@ const chartData = [
 
 export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
   const isAdmin = user.role === UserRole.ADMIN;
+  const navigate = useNavigate();
+
+  // Jika Customer, filter MOCK_REQUESTS untuk "Recent Activity" milik mereka saja
+  const recentRequests = user.role === UserRole.CUSTOMER 
+    ? MOCK_REQUESTS.filter(r => r.userId === user.id).slice(0, 5)
+    : MOCK_REQUESTS.slice(0, 5);
 
   return (
     <div className="space-y-6">
@@ -93,7 +100,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm flex flex-col h-[400px]">
           <h3 className="text-lg font-bold text-slate-800 mb-4">Permintaan Terbaru</h3>
           <div className="flex-1 overflow-y-auto space-y-4 pr-2">
-            {MOCK_REQUESTS.slice(0, 5).map((req) => (
+            {recentRequests.length > 0 ? recentRequests.map((req) => (
               <div key={req.id} className="flex items-start gap-3 pb-4 border-b border-gray-50 last:border-0 last:pb-0">
                 <div className="bg-slate-100 p-2 rounded-full mt-1">
                   <Clock size={16} className="text-slate-500" />
@@ -105,9 +112,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                   <StatusBadge status={req.status} />
                 </div>
               </div>
-            ))}
+            )) : (
+              <div className="text-center text-slate-400 py-8">
+                <p>Belum ada permintaan terbaru.</p>
+              </div>
+            )}
           </div>
-          <button className="mt-4 w-full py-2 text-sm text-blue-600 font-medium hover:bg-blue-50 rounded-lg transition-colors flex items-center justify-center gap-2">
+          <button 
+            onClick={() => navigate('/requests')}
+            className="mt-4 w-full py-2 text-sm text-blue-600 font-medium hover:bg-blue-50 rounded-lg transition-colors flex items-center justify-center gap-2"
+          >
             Lihat Semua <ArrowRight size={16} />
           </button>
         </div>

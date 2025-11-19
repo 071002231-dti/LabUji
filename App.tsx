@@ -9,10 +9,11 @@ import { UserRole, User } from './types';
 import { Bell, Check, Info, AlertTriangle, X } from 'lucide-react';
 import { LABS } from './constants';
 
-// Mock Data Notifikasi
+// Mock Data Notifikasi (Updated with userId)
 const MOCK_NOTIFICATIONS = [
   {
     id: 1,
+    userId: 101, // Not for Demo Customer
     title: 'Permintaan Baru Masuk',
     message: 'PT. Tekstil Maju Jaya mengirimkan sampel baru.',
     time: '5 menit yang lalu',
@@ -21,16 +22,27 @@ const MOCK_NOTIFICATIONS = [
   },
   {
     id: 2,
+    userId: 999, // FOR DEMO CUSTOMER
     title: 'Hasil Uji Selesai',
-    message: 'Pengujian REQ-202511-003 telah divalidasi.',
+    message: 'Pengujian REQ-202511-005 telah divalidasi.',
     time: '1 jam yang lalu',
     type: 'success',
     read: false,
   },
   {
     id: 3,
+    userId: 999, // FOR DEMO CUSTOMER
+    title: 'Status Berubah',
+    message: 'Sampel REQ-202511-004 telah diterima lab.',
+    time: 'Kemarin',
+    type: 'info',
+    read: true,
+  },
+  {
+    id: 4,
+    userId: 102,
     title: 'Peringatan Expired',
-    message: 'Sampel #SMP-998 akan kadaluarsa dalam 3 hari.',
+    message: 'Sampel #SMP-998 akan kadaluarsa.',
     time: 'Kemarin',
     type: 'warning',
     read: true,
@@ -69,7 +81,18 @@ const App: React.FC = () => {
     return <Login onLogin={handleLogin} />;
   }
 
-  const unreadCount = MOCK_NOTIFICATIONS.filter(n => !n.read).length;
+  // FILTER NOTIFICATIONS FOR CURRENT USER
+  const userNotifications = MOCK_NOTIFICATIONS.filter(n => {
+    // If admin/staff, maybe show all internal notifs? 
+    // For now let's strictly filter by userId for customers
+    if (user.role === UserRole.CUSTOMER) {
+      return n.userId === user.id;
+    }
+    // For staff/admin, show notifs that are NOT specific to other customers (or logic as needed)
+    return n.userId !== 999; // Show internal notifs
+  });
+
+  const unreadCount = userNotifications.filter(n => !n.read).length;
 
   return (
     <Router>
@@ -101,7 +124,7 @@ const App: React.FC = () => {
                       <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">{unreadCount} Baru</span>
                     </div>
                     <div className="max-h-96 overflow-y-auto">
-                      {MOCK_NOTIFICATIONS.map((notif) => (
+                      {userNotifications.length > 0 ? userNotifications.map((notif) => (
                         <div key={notif.id} className={`p-4 border-b border-gray-50 hover:bg-slate-50 transition-colors cursor-pointer relative ${!notif.read ? 'bg-blue-50/30' : ''}`}>
                           <div className="flex gap-3">
                             <div className={`mt-1 p-1.5 rounded-full h-fit ${
@@ -129,7 +152,9 @@ const App: React.FC = () => {
                             )}
                           </div>
                         </div>
-                      ))}
+                      )) : (
+                        <div className="p-4 text-center text-slate-400 text-sm">Tidak ada notifikasi.</div>
+                      )}
                     </div>
                     <div className="p-2 text-center border-t border-gray-50 bg-slate-50/50">
                       <button className="text-xs font-medium text-blue-600 hover:text-blue-800 py-1">

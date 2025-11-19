@@ -1,12 +1,34 @@
 import React, { useState, useRef } from 'react';
 import { LABS } from '../constants';
-import { Beaker, Scissors, Binary, Upload, Check, X, Image as ImageIcon } from 'lucide-react';
+import { Beaker, Scissors, Binary, Upload, Check, X, Image as ImageIcon, ChevronDown } from 'lucide-react';
+
+// Definisi 7 Jenis Pengujian sesuai Lab untuk Dropdown
+const LAB_TEST_TYPES: Record<number, string[]> = {
+  1: [ // Lab Tekstil
+    'Pengujian Nomor Benang',
+    'Pengujian Jenis Anyaman',
+    'Pengujian Tetal Benang'
+  ],
+  2: [ // Lab Kimia
+    'Pengujian Kadar Air',
+    'Pengujian Kadar Abu'
+  ],
+  3: [ // Lab Forensik
+    'Pemeriksaan Komputer',
+    'Pemeriksaan Handphone'
+  ]
+};
 
 export const NewRequest: React.FC = () => {
   const [selectedLab, setSelectedLab] = useState<number | null>(null);
   const [formStep, setFormStep] = useState(1);
   const [submitted, setSubmitted] = useState(false);
   
+  // Form State
+  const [sampleName, setSampleName] = useState('');
+  const [selectedTestType, setSelectedTestType] = useState('');
+  const [description, setDescription] = useState('');
+
   // State untuk file upload
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -14,7 +36,17 @@ export const NewRequest: React.FC = () => {
 
   const handleLabSelect = (id: number) => {
     setSelectedLab(id);
+    setSelectedTestType(''); // Reset jenis uji saat ganti lab
     setFormStep(2);
+  };
+
+  const handleStep2Submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!sampleName || !selectedTestType) {
+      alert('Mohon lengkapi nama sampel dan jenis pengujian.');
+      return;
+    }
+    setFormStep(3);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -27,6 +59,9 @@ export const NewRequest: React.FC = () => {
     setSubmitted(false);
     setFormStep(1);
     setSelectedLab(null);
+    setSampleName('');
+    setSelectedTestType('');
+    setDescription('');
     setSelectedFile(null);
     setPreviewUrl(null);
   };
@@ -126,13 +161,17 @@ export const NewRequest: React.FC = () => {
               <button
                 key={lab.id}
                 onClick={() => handleLabSelect(lab.id)}
-                className="group relative flex flex-col items-start p-6 bg-white rounded-xl border-2 border-transparent hover:border-uii-blue shadow-sm hover:shadow-lg transition-all text-left"
+                className="group relative flex flex-col items-start p-6 bg-white rounded-xl border-2 border-transparent hover:border-uii-blue shadow-sm hover:shadow-lg transition-all text-left h-full"
               >
-                <div className="w-12 h-12 bg-blue-50 text-uii-blue rounded-lg flex items-center justify-center mb-4 group-hover:bg-uii-blue group-hover:text-white transition-colors">
-                  <Icon size={24} />
+                <div className="w-14 h-14 bg-blue-50 text-uii-blue rounded-xl flex items-center justify-center mb-4 group-hover:bg-uii-blue group-hover:text-white transition-colors">
+                  <Icon size={28} />
                 </div>
-                <h3 className="font-bold text-slate-800 mb-2 group-hover:text-uii-blue">{lab.name}</h3>
-                <p className="text-sm text-slate-500 leading-relaxed">{lab.description}</p>
+                <h3 className="font-bold text-slate-800 mb-3 text-lg group-hover:text-uii-blue leading-tight">{lab.name}</h3>
+                
+                {/* Menampilkan list services sesuai gambar referensi */}
+                <div className="text-slate-500 text-sm leading-relaxed">
+                   {lab.services.join(', ')}.
+                </div>
               </button>
             );
           })}
@@ -140,7 +179,7 @@ export const NewRequest: React.FC = () => {
       )}
 
       {formStep === 2 && (
-        <form onSubmit={() => setFormStep(3)} className="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+        <form onSubmit={handleStep2Submit} className="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-slate-800 mb-1">
               Detail Sampel - {LABS.find(l => l.id === selectedLab)?.name}
@@ -148,40 +187,66 @@ export const NewRequest: React.FC = () => {
             <p className="text-sm text-slate-500">Isi informasi sampel yang akan diuji.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">Nama/Kode Sampel</label>
-              <input type="text" required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="Contoh: Kain Cotton Combed 30s" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+            
+            {/* Kiri: Input Nama & Deskripsi */}
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">Nama/Kode Sampel <span className="text-red-500">*</span></label>
+                <input 
+                  type="text" 
+                  required 
+                  value={sampleName}
+                  onChange={(e) => setSampleName(e.target.value)}
+                  className="w-full px-4 py-3 bg-white text-slate-800 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all placeholder-slate-400" 
+                  placeholder="Contoh: Kain Cotton Combed 30s" 
+                />
+              </div>
+
+              {/* Dropdown Jenis Pengujian (Dikembalikan ke Dropdown) */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">Jenis Pengujian <span className="text-red-500">*</span></label>
+                <div className="relative">
+                  <select
+                    required
+                    value={selectedTestType}
+                    onChange={(e) => setSelectedTestType(e.target.value)}
+                    className="w-full px-4 py-3 bg-white text-slate-800 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all appearance-none cursor-pointer"
+                  >
+                    <option value="" disabled>Pilih jenis pengujian...</option>
+                    {selectedLab && LAB_TEST_TYPES[selectedLab].map((type) => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
+                  <ChevronDown size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+                </div>
+              </div>
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">Jenis Pengujian</label>
-              <select className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white">
-                <option>Pilih jenis pengujian...</option>
-                {selectedLab === 1 && <option>Uji Kekuatan Tarik</option>}
-                {selectedLab === 1 && <option>Uji Luntur Warna</option>}
-                {selectedLab === 2 && <option>Analisis Proksimat</option>}
-                {selectedLab === 2 && <option>Uji Ph Air</option>}
-                {selectedLab === 3 && <option>Digital Forensics Investigation</option>}
-                {selectedLab === 3 && <option>Data Recovery</option>}
-              </select>
-            </div>
-            <div className="col-span-2 space-y-2">
-              <label className="text-sm font-medium text-slate-700">Deskripsi Tambahan</label>
-              <textarea className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none h-24 resize-none" placeholder="Jelaskan kondisi sampel atau instruksi khusus..."></textarea>
-            </div>
+            
+            {/* Kanan: Deskripsi */}
+             <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">Deskripsi Tambahan</label>
+                <textarea 
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="w-full px-4 py-3 bg-white text-slate-800 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none h-40 resize-none placeholder-slate-400" 
+                  placeholder="Jelaskan kondisi sampel, instruksi khusus, atau detail lainnya..."
+                ></textarea>
+              </div>
+
           </div>
 
-          <div className="flex justify-between pt-4 border-t border-gray-100">
+          <div className="flex justify-between pt-6 border-t border-gray-100">
             <button 
               type="button" 
               onClick={() => setFormStep(1)}
-              className="px-6 py-2 text-slate-600 font-medium hover:bg-slate-50 rounded-lg transition-colors"
+              className="px-6 py-2.5 text-slate-600 font-medium hover:bg-slate-50 rounded-lg transition-colors"
             >
               Kembali
             </button>
             <button 
               type="submit"
-              className="px-6 py-2 bg-uii-blue text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-8 py-2.5 bg-uii-blue text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-md"
             >
               Lanjut ke Upload
             </button>

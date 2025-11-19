@@ -1,76 +1,107 @@
-import { Lab, RequestStatus, TestRequest, UserRole, StatMetric } from './types';
+import { Lab, RequestStatus, TestRequest, StatMetric } from './types';
 
 export const LABS: Lab[] = [
   {
     id: 1,
     name: 'Lab Manufaktur & Pengujian Tekstil',
     code: 'TEXTILE',
-    description: 'Pengujian kekuatan tarik, ketahanan luntur warna, dan komposisi serat.',
+    description: 'Fasilitas uji material tekstil dan serat.',
+    services: ['Pengujian Nomor Benang', 'Pengujian Anyaman', 'Pengujian Tetal Benang'],
     iconName: 'Scissors'
   },
   {
     id: 2,
     name: 'Lab Penelitian Teknik Kimia',
     code: 'CHEM',
-    description: 'Analisis proksimat, kromatografi, dan uji kualitas air limbah.',
+    description: 'Analisis kandungan kimia dan material.',
+    services: ['Pengujian Kadar Air', 'Pengujian Kadar Abu'],
     iconName: 'Beaker'
   },
   {
     id: 3,
     name: 'Lab Forensik Digital',
     code: 'DIGITAL',
-    description: 'Recovery data, analisis malware, dan investigasi kejahatan siber.',
+    description: 'Investigasi bukti digital dan elektronik.',
+    services: ['Pemeriksaan Komputer', 'Pemeriksaan Handphone'],
     iconName: 'Binary'
   }
 ];
 
+// User ID 999 digunakan untuk Demo Customer (Budi Santoso)
 export const MOCK_REQUESTS: TestRequest[] = [
   {
     id: 'REQ-202511-001',
+    userId: 101, // User lain
     customerName: 'PT. Tekstil Maju Jaya',
     labId: 1,
     labName: 'Lab Manufaktur & Pengujian Tekstil',
-    testType: 'Uji Kekuatan Tarik Kain',
+    testType: 'Pengujian Nomor Benang',
     dateSubmitted: '2025-11-18',
     status: RequestStatus.IN_PROGRESS,
+    sampleName: 'Benang Rayon 30s',
+    description: 'Mohon diuji ketebalan dan nomor benang sesuai standar ISO.'
   },
   {
     id: 'REQ-202511-002',
+    userId: 102, // User lain
     customerName: 'Dinas Lingkungan Hidup',
     labId: 2,
     labName: 'Lab Penelitian Teknik Kimia',
-    testType: 'Uji Kualitas Air Sungai',
+    testType: 'Pengujian Kadar Air',
     dateSubmitted: '2025-11-19',
     status: RequestStatus.PENDING,
+    sampleName: 'Sampel Tanah Liat',
+    description: 'Pengujian kandungan air untuk sampel area industri.'
   },
   {
     id: 'REQ-202511-003',
+    userId: 103, // User lain
     customerName: 'Kepolisian Daerah DIY',
     labId: 3,
     labName: 'Lab Forensik Digital',
-    testType: 'Ekstraksi Data Smartphone',
+    testType: 'Pemeriksaan Handphone',
     dateSubmitted: '2025-11-17',
     status: RequestStatus.COMPLETED,
-    expiryDate: '2025-12-17'
+    expiryDate: '2025-12-17',
+    sampleName: 'Samsung Galaxy S21 (Barang Bukti #44)',
+    description: 'Ekstraksi data chat WhatsApp dan Log Panggilan.'
   },
   {
     id: 'REQ-202511-004',
-    customerName: 'CV. Batik Alami',
+    userId: 999, // MILIK CUSTOMER DEMO (Budi)
+    customerName: 'Budi Santoso',
     labId: 1,
     labName: 'Lab Manufaktur & Pengujian Tekstil',
-    testType: 'Uji Ketahanan Luntur',
+    testType: 'Pengujian Jenis Anyaman',
     dateSubmitted: '2025-11-19',
     status: RequestStatus.RECEIVED,
+    sampleName: 'Kain Tenun Troso',
+    description: 'Identifikasi pola anyaman untuk sertifikasi.'
   },
   {
     id: 'REQ-202511-005',
-    customerName: 'Mahasiswa Tugas Akhir',
+    userId: 999, // MILIK CUSTOMER DEMO (Budi)
+    customerName: 'Budi Santoso',
     labId: 2,
     labName: 'Lab Penelitian Teknik Kimia',
-    testType: 'Analisis Spektroskopi',
+    testType: 'Pengujian Kadar Abu',
     dateSubmitted: '2025-11-15',
     status: RequestStatus.DELIVERED,
-    expiryDate: '2026-05-15'
+    expiryDate: '2026-05-15',
+    sampleName: 'Briket Arang Batok',
+    description: 'Uji sisa pembakaran (kadar abu).'
+  },
+  {
+    id: 'REQ-202511-006',
+    userId: 104,
+    customerName: 'CV. Solusi IT',
+    labId: 3,
+    labName: 'Lab Forensik Digital',
+    testType: 'Pemeriksaan Komputer',
+    dateSubmitted: '2025-11-20',
+    status: RequestStatus.IN_PROGRESS,
+    sampleName: 'Harddisk WD Blue 1TB',
+    description: 'Recovery data partisi yang terhapus.'
   }
 ];
 
