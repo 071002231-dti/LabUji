@@ -7,7 +7,7 @@ import { NewRequest } from './pages/NewRequest';
 import { RequestList } from './pages/RequestList';
 import { Login } from './pages/Login';
 import { UserRole, User } from './types';
-import { Bell, Check, Info, AlertTriangle, X } from 'lucide-react';
+import { Bell, Check, Info, AlertTriangle, Menu } from 'lucide-react';
 import { LABS } from './constants';
 
 // Mock Data Notifikasi (Updated with userId and labId)
@@ -77,6 +77,7 @@ const MOCK_NOTIFICATIONS = [
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // State untuk Mobile Sidebar
   const notifRef = useRef<HTMLDivElement>(null);
 
   // Handle click outside notification
@@ -92,6 +93,11 @@ const App: React.FC = () => {
     };
   }, [notifRef]);
 
+  // Close sidebar on route change (mobile)
+  useEffect(() => {
+    setIsSidebarOpen(false);
+  }, []);
+
   // Updated Login Handler to receive full User object from Auth Service
   const handleLogin = (userData: User) => {
     setUser(userData);
@@ -100,6 +106,7 @@ const App: React.FC = () => {
 
   const handleLogout = () => {
     setUser(null);
+    setIsSidebarOpen(false);
   };
 
   if (!user) {
@@ -134,14 +141,38 @@ const App: React.FC = () => {
 
   return (
     <Router>
-      <div className="flex min-h-screen bg-slate-50 font-sans">
-        <Sidebar userRole={user.role} onLogout={handleLogout} />
+      <div className="flex min-h-screen bg-slate-50 font-sans relative">
         
-        <main className="flex-1 ml-64 p-8">
-          {/* Top Header - Updated: Search Removed, Notifications Activated */}
-          <header className="flex justify-end items-center mb-8 relative z-20">
+        {/* Mobile Sidebar Overlay */}
+        {isSidebarOpen && (
+          <div 
+            className="fixed inset-0 bg-black/50 z-30 lg:hidden transition-opacity"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+
+        {/* Sidebar */}
+        <Sidebar 
+          userRole={user.role} 
+          onLogout={handleLogout} 
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+        />
+        
+        {/* Main Content */}
+        <main className="flex-1 lg:ml-64 p-4 md:p-8 w-full transition-all duration-300">
+          {/* Top Header */}
+          <header className="flex justify-between lg:justify-end items-center mb-6 md:mb-8 relative z-20">
             
-            <div className="flex items-center gap-4">
+            {/* Mobile Menu Button */}
+            <button 
+              onClick={() => setIsSidebarOpen(true)}
+              className="p-2 -ml-2 mr-2 rounded-lg hover:bg-gray-100 lg:hidden text-slate-600"
+            >
+              <Menu size={24} />
+            </button>
+
+            <div className="flex items-center gap-3 md:gap-4">
               {/* Notification Bell */}
               <div className="relative" ref={notifRef}>
                 <button 
@@ -156,7 +187,7 @@ const App: React.FC = () => {
 
                 {/* Notification Dropdown */}
                 {isNotifOpen && (
-                  <div className="absolute right-0 mt-3 w-80 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 origin-top-right">
+                  <div className="absolute right-0 mt-3 w-72 md:w-80 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 origin-top-right z-50">
                     <div className="px-4 py-3 border-b border-gray-50 flex justify-between items-center bg-slate-50/50">
                       <h3 className="font-semibold text-slate-800 text-sm">Notifikasi</h3>
                       <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">{unreadCount} Baru</span>
@@ -213,9 +244,9 @@ const App: React.FC = () => {
                   </p>
                 </div>
                 {user.avatar ? (
-                  <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full border border-gray-200 shadow-md" />
+                  <img src={user.avatar} alt={user.name} className="w-9 h-9 md:w-10 md:h-10 rounded-full border border-gray-200 shadow-md object-cover" />
                 ) : (
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-white font-bold shadow-md">
+                  <div className="w-9 h-9 md:w-10 md:h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-white font-bold shadow-md text-sm md:text-base">
                     {user.name.charAt(0)}
                   </div>
                 )}
@@ -225,7 +256,6 @@ const App: React.FC = () => {
 
           <Routes>
             <Route path="/dashboard" element={<Dashboard user={user} />} />
-            {/* PASS USER PROP HERE */}
             <Route path="/request/new" element={<NewRequest user={user} />} />
             <Route path="/requests" element={<RequestList user={user} />} />
             <Route path="/settings" element={<div className="text-slate-500">Halaman Pengaturan (Coming Soon)</div>} />

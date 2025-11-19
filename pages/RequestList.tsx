@@ -160,7 +160,7 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
         <button 
           onClick={() => handleStatusUpdate(RequestStatus.RECEIVED)}
           disabled={isUpdating}
-          className="px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm flex items-center gap-2"
+          className="w-full sm:w-auto px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm flex items-center justify-center gap-2"
         >
           {isUpdating ? <Loader2 size={16} className="animate-spin" /> : <PackageCheck size={16} />}
           Terima Sampel
@@ -174,7 +174,7 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
         <button 
           onClick={() => handleStatusUpdate(RequestStatus.IN_PROGRESS)}
           disabled={isUpdating}
-          className="px-4 py-2 text-sm font-medium bg-purple-600 text-white rounded-lg hover:bg-purple-700 shadow-sm flex items-center gap-2"
+          className="w-full sm:w-auto px-4 py-2 text-sm font-medium bg-purple-600 text-white rounded-lg hover:bg-purple-700 shadow-sm flex items-center justify-center gap-2"
         >
           {isUpdating ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} />}
           Mulai Pengujian
@@ -188,7 +188,7 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
         <button 
           onClick={() => handleStatusUpdate(RequestStatus.COMPLETED)}
           disabled={isUpdating}
-          className="px-4 py-2 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 shadow-sm flex items-center gap-2"
+          className="w-full sm:w-auto px-4 py-2 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 shadow-sm flex items-center justify-center gap-2"
         >
           {isUpdating ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />}
           Selesai Uji & Validasi
@@ -202,7 +202,7 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
         <button 
           onClick={() => handleStatusUpdate(RequestStatus.DELIVERED)}
           disabled={isUpdating}
-          className="px-4 py-2 text-sm font-medium bg-slate-800 text-white rounded-lg hover:bg-slate-900 shadow-sm flex items-center gap-2"
+          className="w-full sm:w-auto px-4 py-2 text-sm font-medium bg-slate-800 text-white rounded-lg hover:bg-slate-900 shadow-sm flex items-center justify-center gap-2"
         >
           {isUpdating ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
           Kirim Hasil via Email
@@ -215,7 +215,7 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden min-h-[600px] flex flex-col relative">
-      <div className="p-6 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="p-4 md:p-6 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-slate-800">Data Pengujian</h2>
           <p className="text-sm text-slate-500">
@@ -228,16 +228,16 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
           </p>
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
           {/* Search Input - Updated Styling */}
-          <div className="relative">
+          <div className="relative w-full sm:w-72">
             <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
             <input 
               type="text" 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Cari No. Request / Jenis Uji..." 
-              className="pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white focus:border-blue-500 w-72 transition-all shadow-sm"
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white focus:border-blue-500 transition-all shadow-sm"
             />
             {searchQuery && (
               <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 bg-slate-200/50 rounded-full p-0.5">
@@ -246,82 +246,84 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
             )}
           </div>
 
-          {/* Filter Dropdown */}
-          <div className="relative" ref={filterDropdownRef}>
-            <button 
-              onClick={() => setIsFilterOpen(!isFilterOpen)}
-              className={`p-2.5 border rounded-lg hover:bg-gray-50 transition-colors ${
-                statusFilter !== 'ALL' || isFilterOpen ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-gray-200 text-slate-600 bg-white'
-              }`}
-              title="Filter Status"
-            >
-              <Filter size={18} />
-            </button>
+          <div className="flex gap-2">
+            {/* Filter Dropdown */}
+            <div className="relative" ref={filterDropdownRef}>
+              <button 
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                className={`p-2.5 border rounded-lg hover:bg-gray-50 transition-colors w-full sm:w-auto ${
+                  statusFilter !== 'ALL' || isFilterOpen ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-gray-200 text-slate-600 bg-white'
+                }`}
+                title="Filter Status"
+              >
+                <Filter size={18} />
+              </button>
 
-            {isFilterOpen && (
-              <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 z-20 overflow-hidden p-2">
-                <div className="text-xs font-semibold text-slate-500 px-2 py-1 mb-1">Filter Status</div>
-                <button 
-                  onClick={() => { setStatusFilter('ALL'); setIsFilterOpen(false); }}
-                  className={`w-full text-left px-3 py-2 rounded-md text-sm mb-1 ${statusFilter === 'ALL' ? 'bg-blue-50 text-blue-700 font-medium' : 'hover:bg-gray-50 text-slate-700'}`}
-                >
-                  Semua Status
-                </button>
-                {Object.values(RequestStatus).map((status) => (
+              {isFilterOpen && (
+                <div className="absolute right-0 sm:right-auto sm:left-0 md:left-auto md:right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 z-20 overflow-hidden p-2">
+                  <div className="text-xs font-semibold text-slate-500 px-2 py-1 mb-1">Filter Status</div>
                   <button 
-                    key={status}
-                    onClick={() => { setStatusFilter(status); setIsFilterOpen(false); }}
-                    className={`w-full text-left px-3 py-2 rounded-md text-sm mb-1 ${statusFilter === status ? 'bg-blue-50 text-blue-700 font-medium' : 'hover:bg-gray-50 text-slate-700'}`}
+                    onClick={() => { setStatusFilter('ALL'); setIsFilterOpen(false); }}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm mb-1 ${statusFilter === 'ALL' ? 'bg-blue-50 text-blue-700 font-medium' : 'hover:bg-gray-50 text-slate-700'}`}
                   >
-                    {status}
+                    Semua Status
                   </button>
-                ))}
-              </div>
-            )}
-          </div>
-          
-          {/* Export Dropdown */}
-          <div className="relative" ref={exportDropdownRef}>
-            <button 
-              onClick={() => setIsExportOpen(!isExportOpen)}
-              className={`flex items-center gap-2 px-4 py-2.5 bg-uii-blue text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm ${isExportOpen ? 'ring-2 ring-blue-300' : ''}`}
-            >
-              <Download size={18} />
-              Export
-              <ChevronDown size={16} className={`transition-transform duration-200 ${isExportOpen ? 'rotate-180' : ''}`} />
-            </button>
-
-            {isExportOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-20 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                <div className="py-1">
-                  <button 
-                    onClick={() => handleExport('excel')}
-                    className="w-full px-4 py-3 text-sm text-slate-700 hover:bg-gray-50 hover:text-green-600 flex items-center gap-3 transition-colors text-left"
-                  >
-                    <div className="bg-green-100 p-1.5 rounded text-green-600">
-                      <FileSpreadsheet size={16} />
-                    </div>
-                    <span>Export Excel (.xlsx)</span>
-                  </button>
-                  <button 
-                    onClick={() => handleExport('pdf')}
-                    className="w-full px-4 py-3 text-sm text-slate-700 hover:bg-gray-50 hover:text-red-600 flex items-center gap-3 transition-colors text-left border-t border-gray-50"
-                  >
-                    <div className="bg-red-100 p-1.5 rounded text-red-600">
-                      <FileText size={16} />
-                    </div>
-                    <span>Export PDF (.pdf)</span>
-                  </button>
+                  {Object.values(RequestStatus).map((status) => (
+                    <button 
+                      key={status}
+                      onClick={() => { setStatusFilter(status); setIsFilterOpen(false); }}
+                      className={`w-full text-left px-3 py-2 rounded-md text-sm mb-1 ${statusFilter === status ? 'bg-blue-50 text-blue-700 font-medium' : 'hover:bg-gray-50 text-slate-700'}`}
+                    >
+                      {status}
+                    </button>
+                  ))}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+            
+            {/* Export Dropdown */}
+            <div className="relative flex-1 sm:flex-none" ref={exportDropdownRef}>
+              <button 
+                onClick={() => setIsExportOpen(!isExportOpen)}
+                className={`w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-uii-blue text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm ${isExportOpen ? 'ring-2 ring-blue-300' : ''}`}
+              >
+                <Download size={18} />
+                Export
+                <ChevronDown size={16} className={`transition-transform duration-200 ${isExportOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {isExportOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-20 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="py-1">
+                    <button 
+                      onClick={() => handleExport('excel')}
+                      className="w-full px-4 py-3 text-sm text-slate-700 hover:bg-gray-50 hover:text-green-600 flex items-center gap-3 transition-colors text-left"
+                    >
+                      <div className="bg-green-100 p-1.5 rounded text-green-600">
+                        <FileSpreadsheet size={16} />
+                      </div>
+                      <span>Export Excel (.xlsx)</span>
+                    </button>
+                    <button 
+                      onClick={() => handleExport('pdf')}
+                      className="w-full px-4 py-3 text-sm text-slate-700 hover:bg-gray-50 hover:text-red-600 flex items-center gap-3 transition-colors text-left border-t border-gray-50"
+                    >
+                      <div className="bg-red-100 p-1.5 rounded text-red-600">
+                        <FileText size={16} />
+                      </div>
+                      <span>Export PDF (.pdf)</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Active Filter Badges */}
       {(statusFilter !== 'ALL' || searchQuery) && (
-        <div className="px-6 pb-4 flex items-center gap-2 text-sm">
+        <div className="px-4 md:px-6 pb-4 flex items-center gap-2 text-sm flex-wrap">
           <span className="text-slate-500">Filter aktif:</span>
           {searchQuery && (
             <span className="bg-slate-100 text-slate-700 px-2 py-1 rounded border border-slate-200 flex items-center gap-1">
@@ -338,7 +340,7 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
       )}
 
       <div className="overflow-x-auto flex-1">
-        <table className="w-full text-sm text-left">
+        <table className="w-full text-sm text-left whitespace-nowrap">
           <thead className="bg-slate-50 text-slate-500 font-medium border-b border-gray-100">
             <tr>
               <th className="px-6 py-4">No. Request</th>
@@ -401,7 +403,7 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
           </tbody>
         </table>
       </div>
-      <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-between items-center text-sm text-slate-500">
+      <div className="p-4 border-t border-gray-100 bg-gray-50 flex flex-col sm:flex-row justify-between items-center text-sm text-slate-500 gap-4">
         <span>Menampilkan {filteredRequests.length} dari {requests.length} data</span>
         <div className="flex gap-2">
           <button className="px-3 py-1 border border-gray-300 rounded bg-white disabled:opacity-50" disabled>Previous</button>
@@ -412,13 +414,14 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
       {/* Detail Modal */}
       {selectedRequest && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden relative animate-in zoom-in-95 duration-200">
-            <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-slate-50">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden relative animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-slate-50 sticky top-0 z-10">
               <div>
                 <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                   Detail Permintaan
-                  <span className="text-sm font-normal text-slate-500 font-mono bg-white px-2 py-0.5 border rounded">{selectedRequest.id}</span>
+                  <span className="text-sm font-normal text-slate-500 font-mono bg-white px-2 py-0.5 border rounded hidden sm:inline-block">{selectedRequest.id}</span>
                 </h3>
+                <p className="text-xs sm:hidden font-mono text-slate-500 mt-1">{selectedRequest.id}</p>
               </div>
               <button 
                 onClick={() => setSelectedRequest(null)}
@@ -430,7 +433,7 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
             
             <div className="p-6 space-y-6">
               {/* Status & Lab Info */}
-              <div className="flex flex-col md:flex-row gap-4 justify-between items-start p-4 bg-blue-50 rounded-xl border border-blue-100">
+              <div className="flex flex-col sm:flex-row gap-4 justify-between items-start p-4 bg-blue-50 rounded-xl border border-blue-100">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-white rounded-lg text-blue-600 shadow-sm">
                     <FlaskConical size={24} />
@@ -440,16 +443,16 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
                     <p className="font-medium text-slate-800">{selectedRequest.labName}</p>
                   </div>
                 </div>
-                <div className="text-right">
+                <div className="text-left sm:text-right w-full sm:w-auto">
                    <p className="text-xs text-slate-500 uppercase font-bold tracking-wide mb-1">Status Saat Ini</p>
                    <StatusBadge status={selectedRequest.status} />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <p className="text-sm text-slate-500 mb-1">Nama Sampel</p>
-                  <p className="font-medium text-slate-800">{selectedRequest.sampleName || '-'}</p>
+                  <p className="font-medium text-slate-800 break-words">{selectedRequest.sampleName || '-'}</p>
                 </div>
                 <div>
                    <p className="text-sm text-slate-500 mb-1">Jenis Pengujian</p>
@@ -478,17 +481,17 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
               </div>
             </div>
 
-            <div className="p-4 border-t border-gray-100 bg-slate-50 flex justify-between items-center">
+            <div className="p-4 border-t border-gray-100 bg-slate-50 flex flex-col sm:flex-row justify-between items-center gap-4">
               {/* Action Buttons Kiri (Untuk User Internal) */}
-              <div>
+              <div className="w-full sm:w-auto">
                  {renderActionButtons()}
               </div>
 
               {/* Tombol Standar Kanan */}
-              <div className="flex gap-3">
+              <div className="flex gap-3 w-full sm:w-auto justify-end">
                 <button 
                   onClick={() => setSelectedRequest(null)}
-                  className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-white hover:text-slate-800 border border-transparent hover:border-gray-200 rounded-lg transition-all"
+                  className="flex-1 sm:flex-none px-4 py-2 text-sm font-medium text-slate-600 hover:bg-white hover:text-slate-800 border border-transparent hover:border-gray-200 rounded-lg transition-all"
                 >
                   Tutup
                 </button>
@@ -496,16 +499,16 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
                   <button 
                     onClick={handleDownloadPDF}
                     disabled={isDownloading}
-                    className="px-4 py-2 text-sm font-medium bg-uii-blue text-white rounded-lg hover:bg-blue-700 shadow-sm flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="flex-1 sm:flex-none px-4 py-2 text-sm font-medium bg-uii-blue text-white rounded-lg hover:bg-blue-700 shadow-sm flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                   >
                     {isDownloading ? (
                       <><Loader2 size={16} className="animate-spin" /> Mengunduh...</>
                     ) : (
-                      <><Download size={16} /> Download Hasil PDF</>
+                      <><Download size={16} /> Download PDF</>
                     )}
                   </button>
                 ) : user.role === UserRole.CUSTOMER ? (
-                  <button disabled className="px-4 py-2 text-sm font-medium bg-slate-200 text-slate-400 rounded-lg cursor-not-allowed flex items-center gap-2">
+                  <button disabled className="flex-1 sm:flex-none px-4 py-2 text-sm font-medium bg-slate-200 text-slate-400 rounded-lg cursor-not-allowed flex items-center justify-center gap-2">
                     <Download size={16} /> Hasil Belum Tersedia
                   </button>
                 ) : null}

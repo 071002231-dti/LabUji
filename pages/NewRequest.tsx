@@ -185,13 +185,13 @@ export const NewRequest: React.FC<NewRequestProps> = ({ user }) => {
 
   if (submitted) {
     return (
-      <div className="max-w-2xl mx-auto bg-white p-12 rounded-2xl shadow-sm border border-gray-100 text-center animate-in zoom-in-95 duration-300">
+      <div className="max-w-2xl mx-auto bg-white p-8 md:p-12 rounded-2xl shadow-sm border border-gray-100 text-center animate-in zoom-in-95 duration-300">
         <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
           <Check size={40} />
         </div>
         <h2 className="text-2xl font-bold text-slate-800 mb-2">Permintaan Berhasil Dikirim!</h2>
-        <p className="text-slate-500 mb-8">
-            Kode Sampel: <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2 py-1 rounded mx-1 border border-slate-200">{sampleName}</span><br/>
+        <p className="text-slate-500 mb-8 break-all">
+            Kode Sampel: <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2 py-1 rounded mx-1 border border-slate-200 inline-block mt-1 sm:mt-0">{sampleName}</span><br/>
             Tim kami akan segera memverifikasi sampel Anda.
         </p>
         <button 
@@ -221,7 +221,7 @@ export const NewRequest: React.FC<NewRequestProps> = ({ user }) => {
       </div>
 
       {formStep === 1 && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in duration-300">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-300">
           {LABS.map((lab) => {
             const Icon = lab.iconName === 'Scissors' ? Scissors : lab.iconName === 'Binary' ? Binary : Beaker;
             return (
@@ -246,7 +246,7 @@ export const NewRequest: React.FC<NewRequestProps> = ({ user }) => {
       )}
 
       {formStep === 2 && (
-        <form onSubmit={handleStep2Submit} className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 animate-in fade-in slide-in-from-right-4 duration-300">
+        <form onSubmit={handleStep2Submit} className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gray-100 animate-in fade-in slide-in-from-right-4 duration-300">
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-slate-800 mb-1">
               Detail Sampel - {LABS.find(l => l.id === selectedLab)?.name}
@@ -332,7 +332,7 @@ export const NewRequest: React.FC<NewRequestProps> = ({ user }) => {
       )}
 
       {formStep === 3 && (
-        <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 animate-in fade-in slide-in-from-right-4 duration-300">
+        <div className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gray-100 animate-in fade-in slide-in-from-right-4 duration-300">
            <div className="mb-6">
             <h3 className="text-lg font-semibold text-slate-800 mb-1">Upload Foto Sampel</h3>
             <p className="text-sm text-slate-500">Unggah foto kondisi awal sampel untuk dokumentasi.</p>
@@ -370,7 +370,7 @@ export const NewRequest: React.FC<NewRequestProps> = ({ user }) => {
               onClick={() => fileInputRef.current?.click()}
               onDragOver={onDragOver}
               onDrop={onDrop}
-              className="border-2 border-dashed border-gray-300 rounded-xl p-12 flex flex-col items-center justify-center mb-8 bg-gray-50 hover:bg-blue-50 hover:border-blue-400 transition-colors cursor-pointer group"
+              className="border-2 border-dashed border-gray-300 rounded-xl p-8 md:p-12 flex flex-col items-center justify-center mb-8 bg-gray-50 hover:bg-blue-50 hover:border-blue-400 transition-colors cursor-pointer group text-center"
             >
               <input 
                 type="file" 

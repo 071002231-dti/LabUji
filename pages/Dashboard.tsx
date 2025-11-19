@@ -58,18 +58,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-end">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-800">Selamat Datang, {user.name}</h2>
           <p className="text-slate-500">Ringkasan aktivitas lab hari ini.</p>
         </div>
-        <span className="text-sm text-slate-400 bg-white px-3 py-1 rounded-full shadow-sm border">
+        <span className="text-sm text-slate-400 bg-white px-3 py-1 rounded-full shadow-sm border self-start md:self-auto">
           {new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
         </span>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {DASHBOARD_STATS.map((stat, idx) => {
           const Icon = iconMap[stat.iconName] || FileText;
           return (
@@ -134,9 +134,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                 <div className="bg-slate-100 p-2 rounded-full mt-1">
                   <Clock size={16} className="text-slate-500" />
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-slate-900">{req.id}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">{req.customerName}</p>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-slate-900 truncate">{req.id}</p>
+                  <p className="text-xs text-slate-500 mt-0.5 truncate">{req.customerName}</p>
                   <p className="text-xs text-slate-500 mt-0.5 mb-2">{req.labName}</p>
                   <StatusBadge status={req.status} />
                 </div>
