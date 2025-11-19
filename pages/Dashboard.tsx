@@ -23,6 +23,8 @@ const chartData = [
 ];
 
 export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
+  const isAdmin = user.role === UserRole.ADMIN;
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-end">
@@ -60,32 +62,35 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         })}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Chart Section */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
-          <h3 className="text-lg font-bold text-slate-800 mb-6">Distribusi Permintaan per Lab</h3>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b' }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b' }} />
-                <Tooltip 
-                  cursor={{ fill: '#f8fafc' }}
-                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                />
-                <Bar dataKey="requests" radius={[4, 4, 0, 0]} barSize={60}>
-                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+      {/* Layout Grid: Jika Admin 3 kolom (2 chart + 1 list), jika bukan Admin 1 kolom full width */}
+      <div className={`grid grid-cols-1 ${isAdmin ? 'lg:grid-cols-3' : 'lg:grid-cols-1'} gap-6`}>
+        {/* Chart Section - HANYA UNTUK ADMIN */}
+        {isAdmin && (
+          <div className="lg:col-span-2 bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
+            <h3 className="text-lg font-bold text-slate-800 mb-6">Distribusi Permintaan per Lab</h3>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b' }} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b' }} />
+                  <Tooltip 
+                    cursor={{ fill: '#f8fafc' }}
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  />
+                  <Bar dataKey="requests" radius={[4, 4, 0, 0]} barSize={60}>
+                    {chartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Recent Activity */}
-        <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm flex flex-col">
+        <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm flex flex-col h-[400px]">
           <h3 className="text-lg font-bold text-slate-800 mb-4">Permintaan Terbaru</h3>
           <div className="flex-1 overflow-y-auto space-y-4 pr-2">
             {MOCK_REQUESTS.slice(0, 5).map((req) => (
