@@ -1,4 +1,5 @@
-import { User, UserRole, TestRequest } from '../types';
+
+import { User, UserRole, TestRequest, RequestStatus } from '../types';
 import { MOCK_REQUESTS as INITIAL_MOCK_REQUESTS } from '../constants';
 
 // KONFIGURASI KONEKSI BACKEND
@@ -23,53 +24,54 @@ const SEED_USERS: any[] = [
   // --- LAB TEKSTIL (ID: 1) ---
   {
     id: 11,
-    name: 'Petugas Tekstil',
-    email: 'petugas.tekstil@uii.ac.id',
+    name: 'Laboran Tekstil', // Digabung
+    email: 'laboran.tekstil@uii.ac.id',
     password: '123',
-    role: UserRole.PETUGAS_LAB,
-    labId: 1
-  },
-  {
-    id: 12,
-    name: 'Analis Tekstil',
-    email: 'analis.tekstil@uii.ac.id',
-    password: '123',
-    role: UserRole.ANALIS,
+    role: UserRole.LABORAN,
     labId: 1
   },
   // --- LAB KIMIA (ID: 2) ---
   {
     id: 21,
-    name: 'Petugas Kimia',
-    email: 'petugas.kimia@uii.ac.id',
+    name: 'Laboran Kimia', // Digabung
+    email: 'laboran.kimia@uii.ac.id',
     password: '123',
-    role: UserRole.PETUGAS_LAB,
-    labId: 2
-  },
-  {
-    id: 22,
-    name: 'Analis Kimia',
-    email: 'analis.kimia@uii.ac.id',
-    password: '123',
-    role: UserRole.ANALIS,
+    role: UserRole.LABORAN,
     labId: 2
   },
   // --- LAB FORENSIK (ID: 3) ---
   {
     id: 31,
-    name: 'Petugas Forensik',
-    email: 'petugas.forensik@uii.ac.id',
+    name: 'Laboran Forensik', // Digabung
+    email: 'laboran.forensik@uii.ac.id',
     password: '123',
-    role: UserRole.PETUGAS_LAB,
+    role: UserRole.LABORAN,
     labId: 3
   },
+  // --- CUSTOMER SEED (Untuk keperluan demo lookup email) ---
   {
-    id: 32,
-    name: 'Analis Forensik',
-    email: 'analis.forensik@uii.ac.id',
-    password: '123',
-    role: UserRole.ANALIS,
-    labId: 3
+    id: 101,
+    name: 'PT. Tekstil Maju Jaya',
+    email: 'contact@maju-jaya.com',
+    role: UserRole.CUSTOMER
+  },
+  {
+    id: 102,
+    name: 'Dinas Lingkungan Hidup',
+    email: 'admin@dlh.gov.id',
+    role: UserRole.CUSTOMER
+  },
+  {
+    id: 103,
+    name: 'Kepolisian Daerah DIY',
+    email: 'cybercrime@poldadiy.go.id',
+    role: UserRole.CUSTOMER
+  },
+  {
+    id: 104,
+    name: 'CV. Solusi IT',
+    email: 'support@solusiit.com',
+    role: UserRole.CUSTOMER
   }
 ];
 
@@ -152,6 +154,18 @@ export const AuthService = {
     } else {
       throw new Error("Google Auth via API belum dikonfigurasi.");
     }
+  },
+
+  // Helper untuk mendapatkan Email Customer (Simulasi Database Lookup)
+  getCustomerEmail: (userId: number): string => {
+    // Cek di SEED_USERS
+    const user = SEED_USERS.find(u => u.id === userId);
+    if (user) return user.email;
+    
+    // Cek jika user demo (Budi)
+    if (userId === 999) return 'budi.santoso@gmail.com';
+
+    return 'customer@email.com'; // Default fallback
   }
 };
 
@@ -181,6 +195,26 @@ export const DataService = {
       });
     } else {
       const response = await apiCall('/requests', 'POST', newRequest, token);
+      return response.data;
+    }
+  },
+
+  // Update Status Request
+  updateRequestStatus: async (id: string, newStatus: RequestStatus, token?: string): Promise<TestRequest> => {
+    if (USE_MOCK_DATA) {
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          const index = currentRequests.findIndex(r => r.id === id);
+          if (index !== -1) {
+            currentRequests[index] = { ...currentRequests[index], status: newStatus };
+            resolve(currentRequests[index]);
+          } else {
+            reject(new Error("Request tidak ditemukan"));
+          }
+        }, 600);
+      });
+    } else {
+      const response = await apiCall(`/requests/${id}/status`, 'PUT', { status: newStatus }, token);
       return response.data;
     }
   }

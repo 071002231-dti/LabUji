@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { UserRole, User } from '../types';
 import { AuthService, getDemoAccounts } from '../services/database';
@@ -211,9 +212,9 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 text-center">Quick Access (Demo Mode)</p>
                 <div className="grid grid-cols-2 gap-2">
                   <button type="button" onClick={() => fillCredentials('admin@uii.ac.id', 'admin')} className="text-xs p-2 bg-slate-50 hover:bg-slate-100 rounded text-slate-600 border">Admin</button>
-                  <button type="button" onClick={() => fillCredentials('petugas.tekstil@uii.ac.id', '123')} className="text-xs p-2 bg-slate-50 hover:bg-slate-100 rounded text-slate-600 border">Petugas Tekstil</button>
-                  <button type="button" onClick={() => fillCredentials('analis.kimia@uii.ac.id', '123')} className="text-xs p-2 bg-slate-50 hover:bg-slate-100 rounded text-slate-600 border">Analis Kimia</button>
-                  <button type="button" onClick={() => fillCredentials('analis.forensik@uii.ac.id', '123')} className="text-xs p-2 bg-slate-50 hover:bg-slate-100 rounded text-slate-600 border">Analis Forensik</button>
+                  <button type="button" onClick={() => fillCredentials('laboran.tekstil@uii.ac.id', '123')} className="text-xs p-2 bg-slate-50 hover:bg-slate-100 rounded text-slate-600 border">Laboran Tekstil</button>
+                  <button type="button" onClick={() => fillCredentials('laboran.kimia@uii.ac.id', '123')} className="text-xs p-2 bg-slate-50 hover:bg-slate-100 rounded text-slate-600 border">Laboran Kimia</button>
+                  <button type="button" onClick={() => fillCredentials('laboran.forensik@uii.ac.id', '123')} className="text-xs p-2 bg-slate-50 hover:bg-slate-100 rounded text-slate-600 border">Laboran Forensik</button>
                 </div>
               </div>
 

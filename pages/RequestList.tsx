@@ -1,9 +1,10 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { LABS } from '../constants';
-import { DataService } from '../services/database';
+import { DataService, AuthService } from '../services/database';
 import { StatusBadge } from '../components/StatusBadge';
 import { RequestStatus, User, UserRole, TestRequest } from '../types';
-import { Search, Filter, Download, FileSpreadsheet, FileText, ChevronDown, X, Eye, Calendar, FlaskConical, Loader2 } from 'lucide-react';
+import { Search, Filter, Download, FileSpreadsheet, FileText, ChevronDown, X, Eye, Calendar, FlaskConical, Loader2, CheckCircle, Play, Send, PackageCheck } from 'lucide-react';
 
 interface RequestListProps {
   user: User;
@@ -20,24 +21,28 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
 
   // Detail Modal State
   const [selectedRequest, setSelectedRequest] = useState<TestRequest | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false); // State untuk download PDF
 
   // Filter States
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<RequestStatus | 'ALL'>('ALL');
 
+  // Fetch Data Function
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const data = await DataService.getRequests();
+      setRequests(data);
+    } catch (error) {
+      console.error("Failed to fetch requests", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Fetch Data on Mount
   useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        const data = await DataService.getRequests();
-        setRequests(data);
-      } catch (error) {
-        console.error("Failed to fetch requests", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
     fetchData();
   }, []);
 
@@ -62,11 +67,54 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
     alert(`Sedang memproses unduhan file ${type.toUpperCase()} untuk ${filteredRequests.length} data...`);
   };
 
+  // --- Handle Download PDF Single ---
+  const handleDownloadPDF = () => {
+    if (!selectedRequest) return;
+    setIsDownloading(true);
+
+    // Simulasi delay network/generate PDF
+    setTimeout(() => {
+      setIsDownloading(false);
+      // Di real app, ini akan mentrigger window.open(url) atau membuat blob link
+      alert(`File Laporan_Hasil_Uji_${selectedRequest.id}.pdf berhasil diunduh ke perangkat Anda.`);
+    }, 1500);
+  };
+
+  // --- Handle Update Status ---
+  const handleStatusUpdate = async (newStatus: RequestStatus) => {
+    if (!selectedRequest) return;
+    setIsUpdating(true);
+    try {
+      await DataService.updateRequestStatus(selectedRequest.id, newStatus);
+      
+      // Update local state agar UI langsung berubah
+      const updatedRequest = { ...selectedRequest, status: newStatus };
+      setSelectedRequest(updatedRequest);
+      
+      // Update list utama
+      setRequests(prev => prev.map(r => r.id === selectedRequest.id ? updatedRequest : r));
+      
+      // LOGIKA EMAIL OTOMATIS SAAT STATUS DELIVERED
+      if (newStatus === RequestStatus.DELIVERED) {
+        const customerEmail = AuthService.getCustomerEmail(selectedRequest.userId);
+        setTimeout(() => {
+          alert(`Berhasil!\n\nHasil uji telah dikirim otomatis ke email customer:\n${customerEmail}`);
+        }, 500);
+      } else {
+        alert(`Status berhasil diperbarui menjadi: ${newStatus}`);
+      }
+
+    } catch (error) {
+      alert('Gagal memperbarui status');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   // --- Logic Pemfilteran ---
   const filteredRequests = requests.filter((req) => {
-    // 1. Filter berdasarkan Lab User (Jika user adalah Staff/Analis)
-    const isStaff = user.role === UserRole.PETUGAS_LAB || user.role === UserRole.ANALIS;
-    if (isStaff && user.labId) {
+    // 1. Filter berdasarkan Lab User (Jika user adalah Laboran)
+    if (user.role === UserRole.LABORAN && user.labId) {
       if (req.labId !== user.labId) return false;
     }
 
@@ -97,6 +145,73 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
 
   // Helper to get Lab Name if user is admin (since filtered data might mix labs)
   const showLabName = !user.labId;
+
+  // --- RENDER ACTION BUTTONS DALAM MODAL ---
+  const renderActionButtons = () => {
+    if (!selectedRequest || user.role === UserRole.CUSTOMER) return null;
+
+    const { status } = selectedRequest;
+    const isAdmin = user.role === UserRole.ADMIN;
+    const isLaboran = user.role === UserRole.LABORAN; // Satu role untuk semua tahap
+
+    // 1. Pending -> Received (Laboran / Admin)
+    if (status === RequestStatus.PENDING && (isLaboran || isAdmin)) {
+      return (
+        <button 
+          onClick={() => handleStatusUpdate(RequestStatus.RECEIVED)}
+          disabled={isUpdating}
+          className="px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm flex items-center gap-2"
+        >
+          {isUpdating ? <Loader2 size={16} className="animate-spin" /> : <PackageCheck size={16} />}
+          Terima Sampel
+        </button>
+      );
+    }
+
+    // 2. Received -> In Progress (Laboran / Admin)
+    if (status === RequestStatus.RECEIVED && (isLaboran || isAdmin)) {
+      return (
+        <button 
+          onClick={() => handleStatusUpdate(RequestStatus.IN_PROGRESS)}
+          disabled={isUpdating}
+          className="px-4 py-2 text-sm font-medium bg-purple-600 text-white rounded-lg hover:bg-purple-700 shadow-sm flex items-center gap-2"
+        >
+          {isUpdating ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} />}
+          Mulai Pengujian
+        </button>
+      );
+    }
+
+    // 3. In Progress -> Completed (Laboran / Admin)
+    if (status === RequestStatus.IN_PROGRESS && (isLaboran || isAdmin)) {
+      return (
+        <button 
+          onClick={() => handleStatusUpdate(RequestStatus.COMPLETED)}
+          disabled={isUpdating}
+          className="px-4 py-2 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 shadow-sm flex items-center gap-2"
+        >
+          {isUpdating ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />}
+          Selesai Uji & Validasi
+        </button>
+      );
+    }
+
+    // 4. Completed -> Delivered (Laboran / Admin)
+    if (status === RequestStatus.COMPLETED && (isLaboran || isAdmin)) {
+      return (
+        <button 
+          onClick={() => handleStatusUpdate(RequestStatus.DELIVERED)}
+          disabled={isUpdating}
+          className="px-4 py-2 text-sm font-medium bg-slate-800 text-white rounded-lg hover:bg-slate-900 shadow-sm flex items-center gap-2"
+        >
+          {isUpdating ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+          Kirim Hasil via Email
+        </button>
+      );
+    }
+
+    return null;
+  };
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden min-h-[600px] flex flex-col relative">
@@ -363,22 +478,38 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
               </div>
             </div>
 
-            <div className="p-4 border-t border-gray-100 bg-slate-50 flex justify-end gap-3">
-              <button 
-                onClick={() => setSelectedRequest(null)}
-                className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-white hover:text-slate-800 border border-transparent hover:border-gray-200 rounded-lg transition-all"
-              >
-                Tutup
-              </button>
-              {selectedRequest.status === RequestStatus.COMPLETED || selectedRequest.status === RequestStatus.DELIVERED ? (
-                <button className="px-4 py-2 text-sm font-medium bg-uii-blue text-white rounded-lg hover:bg-blue-700 shadow-sm flex items-center gap-2">
-                  <Download size={16} /> Download Hasil PDF
+            <div className="p-4 border-t border-gray-100 bg-slate-50 flex justify-between items-center">
+              {/* Action Buttons Kiri (Untuk User Internal) */}
+              <div>
+                 {renderActionButtons()}
+              </div>
+
+              {/* Tombol Standar Kanan */}
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => setSelectedRequest(null)}
+                  className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-white hover:text-slate-800 border border-transparent hover:border-gray-200 rounded-lg transition-all"
+                >
+                  Tutup
                 </button>
-              ) : (
-                <button disabled className="px-4 py-2 text-sm font-medium bg-slate-200 text-slate-400 rounded-lg cursor-not-allowed flex items-center gap-2">
-                  <Download size={16} /> Hasil Belum Tersedia
-                </button>
-              )}
+                {selectedRequest.status === RequestStatus.COMPLETED || selectedRequest.status === RequestStatus.DELIVERED ? (
+                  <button 
+                    onClick={handleDownloadPDF}
+                    disabled={isDownloading}
+                    className="px-4 py-2 text-sm font-medium bg-uii-blue text-white rounded-lg hover:bg-blue-700 shadow-sm flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                  >
+                    {isDownloading ? (
+                      <><Loader2 size={16} className="animate-spin" /> Mengunduh...</>
+                    ) : (
+                      <><Download size={16} /> Download Hasil PDF</>
+                    )}
+                  </button>
+                ) : user.role === UserRole.CUSTOMER ? (
+                  <button disabled className="px-4 py-2 text-sm font-medium bg-slate-200 text-slate-400 rounded-lg cursor-not-allowed flex items-center gap-2">
+                    <Download size={16} /> Hasil Belum Tersedia
+                  </button>
+                ) : null}
+              </div>
             </div>
           </div>
         </div>

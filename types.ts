@@ -1,7 +1,7 @@
+
 export enum UserRole {
   ADMIN = 'admin',
-  PETUGAS_LAB = 'petugas_lab',
-  ANALIS = 'analis',
+  LABORAN = 'laboran', // Digabung dari Petugas & Analis
   CUSTOMER = 'customer',
 }
 

@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Sidebar } from './components/Sidebar';
@@ -112,17 +113,16 @@ const App: React.FC = () => {
       return n.userId === user.id;
     }
 
-    // 2. STAFF (Petugas/Analis):
+    // 2. LABORAN:
     // - Melihat notifikasi yang ditujukan ke Lab mereka (labId match)
     // - ATAU notifikasi personal (userId match)
-    if (user.role === UserRole.PETUGAS_LAB || user.role === UserRole.ANALIS) {
+    if (user.role === UserRole.LABORAN) {
       return n.labId === user.labId || n.userId === user.id;
     }
 
     // 3. ADMIN:
     // - Melihat semua notifikasi operasional Lab (yang punya labId)
     // - Melihat notifikasi personal admin (jika ada)
-    // - (Biasanya Admin tidak perlu melihat notifikasi privat customer seperti 'Hasil Selesai', tapi bisa melihat alert sistem)
     if (user.role === UserRole.ADMIN) {
       return n.labId !== null || n.userId === user.id;
     }

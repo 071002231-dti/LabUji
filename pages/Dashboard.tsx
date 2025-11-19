@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DataService } from '../services/database'; // Import DataService
@@ -48,9 +49,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
   }, []);
 
   // Filter Recent Requests
-  const recentRequests = user.role === UserRole.CUSTOMER 
-    ? requests.filter(r => r.userId === user.id).slice(0, 5)
-    : requests.slice(0, 5);
+  // Laboran hanya melihat request dari Lab-nya sendiri
+  const recentRequests = requests.filter(req => {
+    if (user.role === UserRole.CUSTOMER) return req.userId === user.id;
+    if (user.role === UserRole.LABORAN) return req.labId === user.labId;
+    return true; // Admin sees all
+  }).slice(0, 5);
 
   return (
     <div className="space-y-6">
