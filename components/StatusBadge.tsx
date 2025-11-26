@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { RequestStatus } from '../types';
 
@@ -11,6 +12,9 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
   switch (status) {
     case RequestStatus.PENDING:
       colorClass = 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      break;
+    case RequestStatus.APPROVED:
+      colorClass = 'bg-indigo-100 text-indigo-800 border-indigo-200'; // Warna Indigo untuk Approved
       break;
     case RequestStatus.RECEIVED:
       colorClass = 'bg-blue-100 text-blue-800 border-blue-200';

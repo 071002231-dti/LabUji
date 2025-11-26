@@ -4,7 +4,7 @@ import { LABS } from '../constants';
 import { DataService, AuthService } from '../services/database';
 import { StatusBadge } from '../components/StatusBadge';
 import { RequestStatus, User, UserRole, TestRequest } from '../types';
-import { Search, Filter, Download, FileSpreadsheet, FileText, ChevronDown, X, Eye, Calendar, FlaskConical, Loader2, CheckCircle, Play, Send, PackageCheck } from 'lucide-react';
+import { Search, Filter, Download, FileSpreadsheet, FileText, ChevronDown, X, Eye, Calendar, FlaskConical, Loader2, CheckCircle, Play, Send, PackageCheck, ShieldCheck, Lock } from 'lucide-react';
 
 interface RequestListProps {
   user: User;
@@ -94,12 +94,14 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
       // Update list utama
       setRequests(prev => prev.map(r => r.id === selectedRequest.id ? updatedRequest : r));
       
-      // LOGIKA EMAIL OTOMATIS SAAT STATUS DELIVERED
+      // LOGIKA NOTIFIKASI
       if (newStatus === RequestStatus.DELIVERED) {
         const customerEmail = AuthService.getCustomerEmail(selectedRequest.userId);
         setTimeout(() => {
-          alert(`Berhasil!\n\nHasil uji telah dikirim otomatis ke email customer:\n${customerEmail}`);
+          alert(`VALIDASI SUKSES!\n\nHasil uji telah dikirim otomatis ke email customer:\n${customerEmail}\n\nSertifikat Digital telah diterbitkan.`);
         }, 500);
+      } else if (newStatus === RequestStatus.APPROVED) {
+        alert('Permintaan disetujui. Laboran sekarang dapat memproses sampel.');
       } else {
         alert(`Status berhasil diperbarui menjadi: ${newStatus}`);
       }
@@ -152,10 +154,33 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
 
     const { status } = selectedRequest;
     const isAdmin = user.role === UserRole.ADMIN;
-    const isLaboran = user.role === UserRole.LABORAN; // Satu role untuk semua tahap
+    const isLaboran = user.role === UserRole.LABORAN;
 
-    // 1. Pending -> Received (Laboran / Admin)
-    if (status === RequestStatus.PENDING && (isLaboran || isAdmin)) {
+    // 1. PENDING -> APPROVED (KHUSUS ADMIN)
+    if (status === RequestStatus.PENDING) {
+      if (isAdmin) {
+        return (
+          <button 
+            onClick={() => handleStatusUpdate(RequestStatus.APPROVED)}
+            disabled={isUpdating}
+            className="w-full sm:w-auto px-4 py-2 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-sm flex items-center justify-center gap-2"
+          >
+            {isUpdating ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={16} />}
+            Setujui Permintaan
+          </button>
+        );
+      } else if (isLaboran) {
+        return (
+          <div className="text-sm text-slate-500 italic bg-slate-100 px-3 py-2 rounded-lg flex items-center gap-2 border border-slate-200">
+            <Lock size={16} className="text-slate-400" />
+            Menunggu persetujuan Kepala Lab
+          </div>
+        );
+      }
+    }
+
+    // 2. APPROVED -> RECEIVED (LABORAN / ADMIN)
+    if (status === RequestStatus.APPROVED && (isLaboran || isAdmin)) {
       return (
         <button 
           onClick={() => handleStatusUpdate(RequestStatus.RECEIVED)}
@@ -163,12 +188,12 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
           className="w-full sm:w-auto px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm flex items-center justify-center gap-2"
         >
           {isUpdating ? <Loader2 size={16} className="animate-spin" /> : <PackageCheck size={16} />}
-          Terima Sampel
+          Terima Sampel Fisik
         </button>
       );
     }
 
-    // 2. Received -> In Progress (Laboran / Admin)
+    // 3. RECEIVED -> IN_PROGRESS (LABORAN / ADMIN)
     if (status === RequestStatus.RECEIVED && (isLaboran || isAdmin)) {
       return (
         <button 
@@ -182,7 +207,7 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
       );
     }
 
-    // 3. In Progress -> Completed (Laboran / Admin)
+    // 4. IN_PROGRESS -> COMPLETED (LABORAN / ADMIN)
     if (status === RequestStatus.IN_PROGRESS && (isLaboran || isAdmin)) {
       return (
         <button 
@@ -191,23 +216,32 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
           className="w-full sm:w-auto px-4 py-2 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 shadow-sm flex items-center justify-center gap-2"
         >
           {isUpdating ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />}
-          Selesai Uji & Validasi
+          Selesai Uji & Input Data
         </button>
       );
     }
 
-    // 4. Completed -> Delivered (Laboran / Admin)
-    if (status === RequestStatus.COMPLETED && (isLaboran || isAdmin)) {
-      return (
-        <button 
-          onClick={() => handleStatusUpdate(RequestStatus.DELIVERED)}
-          disabled={isUpdating}
-          className="w-full sm:w-auto px-4 py-2 text-sm font-medium bg-slate-800 text-white rounded-lg hover:bg-slate-900 shadow-sm flex items-center justify-center gap-2"
-        >
-          {isUpdating ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-          Kirim Hasil via Email
-        </button>
-      );
+    // 5. COMPLETED -> DELIVERED (KHUSUS ADMIN - VALIDASI)
+    if (status === RequestStatus.COMPLETED) {
+      if (isAdmin) {
+        return (
+          <button 
+            onClick={() => handleStatusUpdate(RequestStatus.DELIVERED)}
+            disabled={isUpdating}
+            className="w-full sm:w-auto px-4 py-2 text-sm font-medium bg-slate-800 text-white rounded-lg hover:bg-slate-900 shadow-sm flex items-center justify-center gap-2"
+          >
+            {isUpdating ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+            Validasi & Kirim Hasil
+          </button>
+        );
+      } else if (isLaboran) {
+        return (
+           <div className="text-sm text-orange-600 bg-orange-50 px-3 py-2 rounded-lg flex items-center gap-2 border border-orange-100">
+            <Lock size={16} />
+            Menunggu Validasi & Kirim oleh Admin
+          </div>
+        );
+      }
     }
 
     return null;

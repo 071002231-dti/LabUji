@@ -7,6 +7,7 @@ export enum UserRole {
 
 export enum RequestStatus {
   PENDING = 'Menunggu Persetujuan',
+  APPROVED = 'Disetujui Admin', // Status Baru
   RECEIVED = 'Sampel Diterima',
   IN_PROGRESS = 'Sedang Diuji',
   COMPLETED = 'Selesai',
