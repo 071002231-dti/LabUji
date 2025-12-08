@@ -79,6 +79,44 @@ export const PROCEDURE_TEMPLATES: ProcedureTemplate[] = [
     ]
   },
   {
+    id: 'SOP-KIM-002',
+    serviceName: 'Pengujian Kadar Abu',
+    version: '1.0',
+    steps: [
+      {
+        id: 1,
+        title: 'Persiapan Cawan Pengabuan',
+        description: 'Panaskan cawan dalam tanur pada suhu 550°C, dinginkan dalam desikator, dan timbang (W1).',
+        toolsNeeds: 'Cawan Porselen, Tanur, Desikator',
+        standardRef: 'SNI 01-2891-1992',
+        role: UserRole.LABORAN,
+        estimatedDuration: '1 jam'
+      },
+      {
+        id: 2,
+        title: 'Pengabuan Sampel',
+        description: 'Timbang 2-3g sampel (W2). Panaskan di atas kompor listrik hingga tidak berasap, lalu masukkan ke tanur 550°C hingga abu berwarna putih kelabu.',
+        toolsNeeds: 'Tanur, Kompor Listrik',
+        role: UserRole.LABORAN,
+        estimatedDuration: '5 jam'
+      },
+      {
+        id: 3,
+        title: 'Penimbangan Sisa Abu',
+        description: 'Dinginkan cawan berisi abu dalam desikator, lalu timbang bobot konstan (W3).',
+        role: UserRole.LABORAN,
+        estimatedDuration: '30 menit'
+      },
+      {
+        id: 4,
+        title: 'Verifikasi Hasil',
+        description: 'Hitung persentase kadar abu dan verifikasi data.',
+        role: UserRole.ADMIN,
+        estimatedDuration: '15 menit'
+      }
+    ]
+  },
+  {
     id: 'SOP-FOR-002',
     serviceName: 'Pemeriksaan Handphone',
     version: '2.0',
@@ -123,6 +161,133 @@ export const PROCEDURE_TEMPLATES: ProcedureTemplate[] = [
         estimatedDuration: '1 jam'
       }
     ]
+  },
+  {
+    id: 'SOP-FOR-001',
+    serviceName: 'Pemeriksaan Komputer',
+    version: '1.0',
+    steps: [
+      {
+        id: 1,
+        title: 'Bongkar & Dokumentasi HDD',
+        description: 'Bongkar casing PC/Laptop, dokumentasikan serial number Harddisk/SSD, foto fisik.',
+        toolsNeeds: 'Toolkit Obeng, Kamera',
+        role: UserRole.LABORAN,
+        estimatedDuration: '30 menit'
+      },
+      {
+        id: 2,
+        title: 'Write Blocking',
+        description: 'Sambungkan HDD ke Write Blocker hardware sebelum dihubungkan ke workstation forensik.',
+        toolsNeeds: 'Tableau Write Blocker',
+        role: UserRole.LABORAN,
+        estimatedDuration: '5 menit'
+      },
+      {
+        id: 3,
+        title: 'Acquisition / Imaging',
+        description: 'Lakukan bit-by-bit copy (E01 format) dari barang bukti ke storage lab.',
+        toolsNeeds: 'FTK Imager',
+        role: UserRole.LABORAN,
+        estimatedDuration: '2-5 jam (tergantung size)'
+      },
+      {
+        id: 4,
+        title: 'Analisis File System',
+        description: 'Recovery deleted files, analisis registry, dan internet history.',
+        role: UserRole.LABORAN,
+        estimatedDuration: 'Variable'
+      },
+      {
+        id: 5,
+        title: 'Validasi Hash',
+        description: 'Verifikasi nilai Hash MD5/SHA1 antara barang bukti asli dan hasil image.',
+        role: UserRole.ADMIN,
+        estimatedDuration: '15 menit'
+      }
+    ]
+  },
+  {
+    id: 'SOP-TEX-001',
+    serviceName: 'Pengujian Nomor Benang',
+    version: '1.0',
+    steps: [
+      {
+        id: 1,
+        title: 'Kondisioning Sampel',
+        description: 'Kondisikan benang dalam ruang standar (20±2°C, 65±2% RH) selama minimal 24 jam.',
+        standardRef: 'SNI ISO 139',
+        role: UserRole.LABORAN,
+        estimatedDuration: '24 jam'
+      },
+      {
+        id: 2,
+        title: 'Pengelosan (Reeling)',
+        description: 'Buat untaian benang dengan panjang tertentu (misal 100m) menggunakan Reeling Machine.',
+        toolsNeeds: 'Reeling Machine',
+        role: UserRole.LABORAN,
+        estimatedDuration: '15 menit'
+      },
+      {
+        id: 3,
+        title: 'Penimbangan',
+        description: 'Timbang untaian benang dengan neraca analitik ketelitian 0.001g.',
+        toolsNeeds: 'Neraca Analitik',
+        role: UserRole.LABORAN,
+        estimatedDuration: '10 menit'
+      },
+      {
+        id: 4,
+        title: 'Perhitungan Nomor',
+        description: 'Hitung nomor benang (Tex, Denier, atau Ne1) berdasarkan berat dan panjang.',
+        role: UserRole.LABORAN,
+        estimatedDuration: '10 menit'
+      },
+      {
+        id: 5,
+        title: 'Validasi Hasil',
+        description: 'Cek konsistensi hasil uji antar spesimen.',
+        role: UserRole.ADMIN,
+        estimatedDuration: '10 menit'
+      }
+    ]
+  },
+  {
+    id: 'SOP-TEX-002',
+    serviceName: 'Pengujian Jenis Anyaman',
+    version: '1.0',
+    steps: [
+      {
+        id: 1,
+        title: 'Persiapan Kain',
+        description: 'Potong kain sampel ukuran 10x10 cm, pastikan arah lusi dan pakan lurus.',
+        toolsNeeds: 'Gunting, Lup/Kaca Pembesar',
+        role: UserRole.LABORAN,
+        estimatedDuration: '10 menit'
+      },
+      {
+        id: 2,
+        title: 'Identifikasi Anyaman',
+        description: 'Bongkar benang satu per satu dan amati silangan lusi/pakan menggunakan jarum bedah dan lup.',
+        toolsNeeds: 'Jarum, Lup, Meja Periksa',
+        role: UserRole.LABORAN,
+        estimatedDuration: '30 menit'
+      },
+      {
+        id: 3,
+        title: 'Gambar Desain Anyaman',
+        description: 'Gambarkan pola anyaman pada kertas desain (point paper).',
+        role: UserRole.LABORAN,
+        estimatedDuration: '20 menit'
+      },
+      {
+        id: 4,
+        title: 'Penentuan Nama Anyaman',
+        description: 'Tentukan nama anyaman (Polos, Keper, Satin, dll) berdasarkan pola.',
+        role: UserRole.ADMIN,
+        estimatedDuration: '10 menit'
+      }
+    ]
   }
 ];
 
@@ -135,6 +300,14 @@ const createMockRequest = (
   // Cari Template
   const template = PROCEDURE_TEMPLATES.find(t => t.serviceName === testType);
   
+  // Tentukan current step index berdasarkan status
+  let currentStepIndex = 0;
+  if (status === RequestStatus.COMPLETED || status === RequestStatus.DELIVERED) {
+    currentStepIndex = template ? template.steps.length : 0;
+  } else if (status === RequestStatus.IN_PROGRESS) {
+    currentStepIndex = 1; // Simulasi sedang di langkah ke-2
+  }
+
   return {
     id,
     userId,
@@ -178,14 +351,38 @@ const createMockRequest = (
     procedure: template ? {
       templateId: template.id,
       templateVersion: template.version,
-      currentStepIndex: status === RequestStatus.COMPLETED ? template.steps.length : (status === RequestStatus.IN_PROGRESS ? 1 : 0),
-      steps: template.steps.map((step, idx) => ({
-        ...step,
-        status: status === RequestStatus.COMPLETED ? 'completed' : (status === RequestStatus.IN_PROGRESS && idx === 1 ? 'in_progress' : 'pending'),
-        resultData: status === RequestStatus.COMPLETED ? 'Data OK' : undefined,
-        completedAt: status === RequestStatus.COMPLETED ? dateSubmitted : undefined,
-        completedBy: status === RequestStatus.COMPLETED ? 'Laboran' : undefined
-      }))
+      currentStepIndex: currentStepIndex,
+      steps: template.steps.map((step, idx) => {
+        // Tentukan status per step
+        let stepStatus: 'pending' | 'in_progress' | 'completed' = 'pending';
+        let resultData: string | undefined = undefined;
+        let completedAt: string | undefined = undefined;
+        let completedBy: string | undefined = undefined;
+
+        if (status === RequestStatus.COMPLETED || status === RequestStatus.DELIVERED) {
+           stepStatus = 'completed';
+           resultData = 'Data Valid (Auto)';
+           completedAt = dateSubmitted;
+           completedBy = 'Laboran';
+        } else if (status === RequestStatus.IN_PROGRESS) {
+           if (idx < currentStepIndex) {
+              stepStatus = 'completed';
+              resultData = 'Selesai (Mock)';
+              completedAt = dateSubmitted;
+              completedBy = 'Laboran';
+           } else if (idx === currentStepIndex) {
+              stepStatus = 'in_progress';
+           }
+        }
+
+        return {
+          ...step,
+          status: stepStatus,
+          resultData,
+          completedAt,
+          completedBy
+        };
+      })
     } : undefined
   };
 };

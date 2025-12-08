@@ -195,6 +195,16 @@ export const NewRequest: React.FC<NewRequestProps> = ({ user }) => {
     );
   }
 
+  // CSS Class Helpers for cleaner Look
+  const sectionClass = "p-6 md:p-8 bg-white border-b border-gray-100 last:border-0";
+  const inputClass = "w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all";
+  const readOnlyInputClass = "w-full px-3 py-2 bg-white border-2 border-dashed border-gray-200 rounded-lg text-slate-500 cursor-not-allowed";
+  
+  // Fix for dark backgrounds on inputs
+  const checkboxClass = "w-5 h-5 text-uii-blue bg-white border-gray-300 rounded focus:ring-uii-blue focus:ring-2 cursor-pointer accent-uii-blue";
+  const radioClass = "w-5 h-5 text-uii-blue bg-white border-gray-300 focus:ring-uii-blue focus:ring-2 cursor-pointer accent-uii-blue";
+  const inlineInputClass = "flex-1 px-2 py-1 text-sm border-b border-gray-300 outline-none bg-transparent focus:border-uii-blue transition-colors placeholder-gray-400 text-slate-700 disabled:opacity-50 disabled:bg-transparent";
+
   return (
     <div className="max-w-5xl mx-auto">
       <div className="mb-6">
@@ -223,95 +233,91 @@ export const NewRequest: React.FC<NewRequestProps> = ({ user }) => {
         <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           
           {/* BAGIAN A: Pendaftaran Permohonan */}
-          <div className="p-6 md:p-8 bg-slate-50/50">
+          <div className={sectionClass}>
              {renderSectionHeader('Bagian A: Identitas Pemohon', <UserIcon size={20} />)}
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                    <label className="block text-sm font-medium mb-1">Nama Lengkap</label>
-                   <input type="text" required value={applicant.name} onChange={e => setApplicant({...applicant, name: e.target.value})} className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-blue-500" />
+                   <input type="text" required value={applicant.name} onChange={e => setApplicant({...applicant, name: e.target.value})} className={inputClass} />
                 </div>
                 <div>
                    <label className="block text-sm font-medium mb-1">Email</label>
-                   <input type="email" required value={applicant.email} onChange={e => setApplicant({...applicant, email: e.target.value})} className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-blue-500" />
+                   <input type="email" required value={applicant.email} onChange={e => setApplicant({...applicant, email: e.target.value})} className={inputClass} />
                 </div>
                 <div>
                    <label className="block text-sm font-medium mb-1">Perusahaan / Instansi</label>
-                   <input type="text" required value={applicant.company} onChange={e => setApplicant({...applicant, company: e.target.value})} className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-blue-500" />
+                   <input type="text" required value={applicant.company} onChange={e => setApplicant({...applicant, company: e.target.value})} className={inputClass} />
                 </div>
                 <div>
                    <label className="block text-sm font-medium mb-1">No. HP / WhatsApp</label>
-                   <input type="text" required value={applicant.phone} onChange={e => setApplicant({...applicant, phone: e.target.value})} className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-blue-500" />
+                   <input type="text" required value={applicant.phone} onChange={e => setApplicant({...applicant, phone: e.target.value})} className={inputClass} />
                 </div>
                 <div className="md:col-span-2">
                    <label className="block text-sm font-medium mb-1">Alamat Lengkap</label>
-                   <textarea rows={2} required value={applicant.address} onChange={e => setApplicant({...applicant, address: e.target.value})} className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-blue-500" />
+                   <textarea rows={2} required value={applicant.address} onChange={e => setApplicant({...applicant, address: e.target.value})} className={inputClass} />
                 </div>
              </div>
           </div>
 
-          <div className="h-1 bg-gray-100"></div>
-
           {/* BAGIAN B: Keperluan & Layanan */}
-          <div className="p-6 md:p-8">
+          <div className={sectionClass}>
              {renderSectionHeader('Bagian B: Keperluan & Layanan', <Briefcase size={20} />)}
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                    <label className="block text-sm font-medium mb-1">Jenis Layanan <span className="text-red-500">*</span></label>
-                   <select required value={service.testType} onChange={handleTestTypeChange} className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg">
+                   <select required value={service.testType} onChange={handleTestTypeChange} className={inputClass}>
                       <option value="" disabled>Pilih layanan...</option>
                       {selectedLab && LAB_TEST_TYPES[selectedLab].map(t => <option key={t} value={t}>{t}</option>)}
                    </select>
                 </div>
                 <div>
                    <label className="block text-sm font-medium mb-2">Tujuan Pengujian</label>
-                   <div className="space-y-2">
+                   <div className="space-y-3">
                       {['Kesesuaian Standar SNI/ISO', 'Internal QA/QC', 'Sertifikasi/Perizinan', 'Penelitian'].map(p => (
-                         <label key={p} className="flex items-center gap-2 text-sm text-slate-700">
-                            <input type="checkbox" checked={service.purpose.includes(p)} onChange={() => handleCheckboxChange('purpose', p)} className="rounded text-uii-blue" />
+                         <label key={p} className="flex items-center gap-3 text-sm text-slate-700 cursor-pointer">
+                            <input type="checkbox" checked={service.purpose.includes(p)} onChange={() => handleCheckboxChange('purpose', p)} className={checkboxClass} />
                             {p}
                          </label>
                       ))}
-                      <div className="flex items-center gap-2">
-                         <input type="checkbox" checked={service.purpose.includes('Lainnya')} onChange={() => handleCheckboxChange('purpose', 'Lainnya')} className="rounded text-uii-blue" />
-                         <span className="text-sm text-slate-700">Lainnya:</span>
-                         <input type="text" className="flex-1 px-2 py-1 text-sm border-b border-gray-300 outline-none" placeholder="Isi detail..." value={service.purposeDetail} onChange={e => setService({...service, purposeDetail: e.target.value})} disabled={!service.purpose.includes('Lainnya')} />
+                      <div className="flex items-center gap-3">
+                         <input type="checkbox" checked={service.purpose.includes('Lainnya')} onChange={() => handleCheckboxChange('purpose', 'Lainnya')} className={checkboxClass} />
+                         <span className="text-sm text-slate-700 whitespace-nowrap">Lainnya:</span>
+                         <input type="text" className={inlineInputClass} placeholder="Isi detail..." value={service.purposeDetail} onChange={e => setService({...service, purposeDetail: e.target.value})} disabled={!service.purpose.includes('Lainnya')} />
                       </div>
                    </div>
                 </div>
              </div>
           </div>
 
-          <div className="h-1 bg-gray-100"></div>
-
           {/* BAGIAN C: Data Sampel */}
-          <div className="p-6 md:p-8 bg-slate-50/50">
+          <div className={sectionClass}>
              {renderSectionHeader('Bagian C: Data Sampel', <Beaker size={20} />)}
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                    <label className="block text-sm font-medium mb-1">Nama/Kode Sampel (Auto)</label>
-                   <input type="text" readOnly value={sample.name} className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-slate-500 cursor-not-allowed" />
+                   <input type="text" readOnly value={sample.name} className={readOnlyInputClass} />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                     <div>
                         <label className="block text-sm font-medium mb-1">Jumlah Unit</label>
-                        <input type="number" min="1" required value={sample.count} onChange={e => setSample({...sample, count: parseInt(e.target.value)})} className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg" />
+                        <input type="number" min="1" required value={sample.count} onChange={e => setSample({...sample, count: parseInt(e.target.value)})} className={inputClass} />
                     </div>
                     <div>
                         <label className="block text-sm font-medium mb-1">Jenis Kemasan</label>
-                        <input type="text" placeholder="Box/Plastik" required value={sample.packaging} onChange={e => setSample({...sample, packaging: e.target.value})} className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg" />
+                        <input type="text" placeholder="Box/Plastik" required value={sample.packaging} onChange={e => setSample({...sample, packaging: e.target.value})} className={inputClass} />
                     </div>
                 </div>
                 <div className="md:col-span-2">
                    <label className="block text-sm font-medium mb-1">Deskripsi Singkat Sampel</label>
-                   <textarea rows={2} required value={sample.description} onChange={e => setSample({...sample, description: e.target.value})} className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg" placeholder="Warna, tekstur, kondisi fisik..." />
+                   <textarea rows={2} required value={sample.description} onChange={e => setSample({...sample, description: e.target.value})} className={inputClass} placeholder="Warna, tekstur, kondisi fisik..." />
                 </div>
                 <div>
                    <label className="block text-sm font-medium mb-1">Perkiraan Tgl Kirim</label>
-                   <input type="date" required value={sample.estimatedDelivery} onChange={e => setSample({...sample, estimatedDelivery: e.target.value})} className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg" />
+                   <input type="date" required value={sample.estimatedDelivery} onChange={e => setSample({...sample, estimatedDelivery: e.target.value})} className={inputClass} />
                 </div>
                 <div>
                    <label className="block text-sm font-medium mb-1">Prioritas Layanan</label>
-                   <select value={sample.priority} onChange={e => setSample({...sample, priority: e.target.value as any})} className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg">
+                   <select value={sample.priority} onChange={e => setSample({...sample, priority: e.target.value as any})} className={inputClass}>
                       <option value="Reguler">Reguler (Standard TAT)</option>
                       <option value="Mendesak">Mendesak (Express Charge +50%)</option>
                    </select>
@@ -319,12 +325,12 @@ export const NewRequest: React.FC<NewRequestProps> = ({ user }) => {
                 <div className="md:col-span-2">
                     <label className="block text-sm font-medium mb-1">Foto Sampel</label>
                     {previewUrl ? (
-                        <div className="relative w-full h-48 bg-gray-100 rounded-lg overflow-hidden border">
+                        <div className="relative w-full h-48 bg-gray-50 rounded-lg overflow-hidden border border-gray-200">
                             <img src={previewUrl} className="w-full h-full object-contain" alt="Preview" />
                             <button type="button" onClick={() => { setPreviewUrl(null); setSelectedFile(null); }} className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full"><X size={16}/></button>
                         </div>
                     ) : (
-                        <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-blue-50 transition-colors">
+                        <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-blue-50 transition-colors bg-white">
                             <Upload className="text-gray-400 mb-2" />
                             <span className="text-sm text-gray-500">Upload foto sampel</span>
                             <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
@@ -334,25 +340,23 @@ export const NewRequest: React.FC<NewRequestProps> = ({ user }) => {
              </div>
           </div>
 
-          <div className="h-1 bg-gray-100"></div>
-
           {/* BAGIAN D: Logistik */}
-          <div className="p-6 md:p-8">
+          <div className={sectionClass}>
              {renderSectionHeader('Bagian D: Logistik & Penanganan', <Truck size={20} />)}
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label className="block text-sm font-medium mb-2">Cara Pengiriman Sampel</label>
                     <div className="flex gap-4">
                         {['Antar Langsung', 'Ekspedisi'].map(m => (
-                            <label key={m} className="flex items-center gap-2 text-sm">
-                                <input type="radio" name="delivery" checked={logistics.deliveryMethod === m} onChange={() => setLogistics({...logistics, deliveryMethod: m as any})} className="text-uii-blue" /> {m}
+                            <label key={m} className="flex items-center gap-2 text-sm cursor-pointer">
+                                <input type="radio" name="delivery" checked={logistics.deliveryMethod === m} onChange={() => setLogistics({...logistics, deliveryMethod: m as any})} className={radioClass} /> {m}
                             </label>
                         ))}
                     </div>
                 </div>
                 <div>
                     <label className="block text-sm font-medium mb-2">Pengembalian Sisa Sampel</label>
-                    <select value={logistics.returnPolicy} onChange={e => setLogistics({...logistics, returnPolicy: e.target.value as any})} className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg">
+                    <select value={logistics.returnPolicy} onChange={e => setLogistics({...logistics, returnPolicy: e.target.value as any})} className={inputClass}>
                         <option value="Dikembalikan">Dikembalikan ke Pelanggan</option>
                         <option value="Dimusnahkan">Dimusnahkan oleh Lab</option>
                         <option value="Tidak Perlu">Tidak ada sisa (habis uji)</option>
@@ -362,8 +366,8 @@ export const NewRequest: React.FC<NewRequestProps> = ({ user }) => {
                     <label className="block text-sm font-medium mb-2">Perlakuan Khusus</label>
                     <div className="flex gap-4">
                          {['Butuh Pendingin', 'Fragile/Mudah Pecah', 'Bahan Berbahaya'].map(h => (
-                            <label key={h} className="flex items-center gap-2 text-sm">
-                                <input type="checkbox" checked={logistics.specialHandling.includes(h)} onChange={() => handleCheckboxChange('specialHandling', h)} className="rounded text-uii-blue" /> {h}
+                            <label key={h} className="flex items-center gap-2 text-sm cursor-pointer">
+                                <input type="checkbox" checked={logistics.specialHandling.includes(h)} onChange={() => handleCheckboxChange('specialHandling', h)} className={checkboxClass} /> {h}
                             </label>
                          ))}
                     </div>
@@ -371,25 +375,23 @@ export const NewRequest: React.FC<NewRequestProps> = ({ user }) => {
              </div>
           </div>
 
-          <div className="h-1 bg-gray-100"></div>
-
           {/* BAGIAN E: Pernyataan */}
-          <div className="p-6 md:p-8 bg-yellow-50">
+          <div className={`${sectionClass} bg-white`}>
              {renderSectionHeader('Bagian E: Pernyataan & Persetujuan', <FileText size={20} />)}
-             <div className="space-y-3">
+             <div className="space-y-3 p-4 border border-gray-200 rounded-xl bg-white">
                 <label className="flex items-start gap-3 text-sm text-slate-800 cursor-pointer">
-                    <input type="checkbox" required checked={agreements.dataTruth} onChange={e => setAgreements({...agreements, dataTruth: e.target.checked})} className="mt-1 rounded text-uii-blue focus:ring-uii-blue" />
+                    <input type="checkbox" required checked={agreements.dataTruth} onChange={e => setAgreements({...agreements, dataTruth: e.target.checked})} className={`${checkboxClass} mt-0.5`} />
                     <span>Saya menyatakan bahwa data yang diisi adalah benar dan sampel yang dikirimkan sesuai dengan deskripsi di atas.</span>
                 </label>
                 <label className="flex items-start gap-3 text-sm text-slate-800 cursor-pointer">
-                    <input type="checkbox" required checked={agreements.understanding} onChange={e => setAgreements({...agreements, understanding: e.target.checked})} className="mt-1 rounded text-uii-blue focus:ring-uii-blue" />
+                    <input type="checkbox" required checked={agreements.understanding} onChange={e => setAgreements({...agreements, understanding: e.target.checked})} className={`${checkboxClass} mt-0.5`} />
                     <span>Saya memahami prosedur, perkiraan waktu (TAT), dan biaya yang akan dikonfirmasi setelah sampel diverifikasi oleh Lab.</span>
                 </label>
              </div>
           </div>
 
           {/* Footer Actions */}
-          <div className="p-6 border-t border-gray-100 flex justify-between">
+          <div className="p-6 border-t border-gray-100 flex justify-between bg-white">
              <button type="button" onClick={() => setFormStep(1)} className="px-6 py-2 text-slate-600 font-medium hover:bg-slate-50 rounded-lg">Kembali</button>
              <button type="submit" disabled={isSubmitting} className="px-8 py-2 bg-uii-blue text-white font-bold rounded-lg hover:bg-blue-700 shadow-md flex items-center gap-2">
                 {isSubmitting ? <Loader2 className="animate-spin" /> : 'Kirim Permohonan'}

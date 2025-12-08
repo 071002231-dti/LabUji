@@ -184,6 +184,22 @@ export const DataService = {
           const index = currentRequests.findIndex(r => r.id === id);
           if (index !== -1) {
             currentRequests[index] = { ...currentRequests[index], status: newStatus };
+            
+            // --- AUTOMATION: ACTIVATE PROCEDURE ---
+            // Jika status berubah menjadi IN_PROGRESS, aktifkan step pertama jika belum ada yg aktif
+            if (newStatus === RequestStatus.IN_PROGRESS && currentRequests[index].procedure) {
+               const proc = currentRequests[index].procedure;
+               if (proc && proc.steps.length > 0) {
+                   const hasInProgress = proc.steps.some(s => s.status === 'in_progress');
+                   const hasCompleted = proc.steps.some(s => s.status === 'completed');
+                   // Jika belum ada yang dikerjakan, aktifkan langkah pertama
+                   if (!hasInProgress && !hasCompleted) {
+                       proc.steps[0].status = 'in_progress';
+                       proc.currentStepIndex = 0;
+                   }
+               }
+            }
+
             resolve(currentRequests[index]);
           } else {
             reject(new Error("Request tidak ditemukan"));
@@ -216,12 +232,10 @@ export const DataService = {
                   req.procedure.steps[stepIndex].completedAt = new Date().toISOString();
                   
                   // Majukan currentStepIndex jika urutan sesuai
-                  if (req.procedure.currentStepIndex === stepIndex) {
-                      req.procedure.currentStepIndex += 1;
-                      // Set next step to in_progress if available
-                      if (req.procedure.steps[stepIndex + 1]) {
-                          req.procedure.steps[stepIndex + 1].status = 'in_progress';
-                      }
+                  // NOTE: Tidak perlu strict check index, cukup cari step berikutnya yang pending
+                  if (req.procedure.steps[stepIndex + 1]) {
+                      req.procedure.steps[stepIndex + 1].status = 'in_progress';
+                      req.procedure.currentStepIndex = stepIndex + 1;
                   }
               }
               resolve();

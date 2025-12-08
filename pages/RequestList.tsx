@@ -4,7 +4,7 @@ import { LABS } from '../constants';
 import { DataService, AuthService } from '../services/database';
 import { StatusBadge } from '../components/StatusBadge';
 import { RequestStatus, User, UserRole, TestRequest, ProcedureStep } from '../types';
-import { Search, Filter, Download, FileSpreadsheet, FileText, ChevronDown, ChevronRight, X, Eye, Calendar, FlaskConical, Loader2, CheckCircle, Play, Send, PackageCheck, ShieldCheck, Lock, Truck, User as UserIcon, CheckSquare, Clock, Briefcase } from 'lucide-react';
+import { Search, Filter, Download, FileSpreadsheet, FileText, ChevronDown, ChevronRight, X, Eye, Calendar, FlaskConical, Loader2, CheckCircle, Play, Send, PackageCheck, ShieldCheck, Lock, Truck, User as UserIcon, CheckSquare, Clock, Briefcase, Info } from 'lucide-react';
 
 interface RequestListProps {
   user: User;
@@ -69,9 +69,16 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
     setIsUpdating(true);
     try {
       await DataService.updateRequestStatus(selectedRequest.id, newStatus);
-      const updatedRequest = { ...selectedRequest, status: newStatus };
-      setSelectedRequest(updatedRequest);
-      setRequests(prev => prev.map(r => r.id === selectedRequest.id ? updatedRequest : r));
+      // Re-fetch data to get any side effects (like procedure activation)
+      const updatedData = await DataService.getRequests();
+      const updatedReq = updatedData.find(r => r.id === selectedRequest.id);
+      
+      setRequests(updatedData);
+      if (updatedReq) {
+        setSelectedRequest(updatedReq);
+        if (newStatus === RequestStatus.IN_PROGRESS) setActiveTab('procedure'); // Auto switch tab when starting
+      }
+      
       alert(`Status berhasil diperbarui: ${newStatus}`);
     } catch (error) {
       alert('Gagal memperbarui status');
@@ -141,7 +148,7 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
   // Helper untuk menampilkan Data Info A-E dengan rapi
   const InfoSection = ({ title, icon, children }: any) => (
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mb-4">
-          <div className="bg-slate-50 px-4 py-3 border-b border-gray-100 flex items-center gap-2 font-bold text-slate-700">
+          <div className="bg-white px-4 py-3 border-b border-gray-100 flex items-center gap-2 font-bold text-slate-700">
               <span className="text-uii-blue">{icon}</span> {title}
           </div>
           <div className="p-4 text-sm text-slate-600 space-y-2">
@@ -190,7 +197,7 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
       {/* Table */}
       <div className="overflow-x-auto flex-1">
         <table className="w-full text-sm text-left whitespace-nowrap">
-           <thead className="bg-slate-50 text-slate-500 font-medium border-b border-gray-100">
+           <thead className="bg-white text-slate-500 font-medium border-b border-gray-200">
               <tr>
                  <th className="px-6 py-4">No. Request</th>
                  <th className="px-6 py-4">Customer</th>
@@ -221,7 +228,7 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl overflow-hidden relative max-h-[95vh] flex flex-col">
             
             {/* Modal Header */}
-            <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-slate-50">
+            <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-white">
                <div>
                   <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">Detail Permintaan <span className="text-sm font-normal font-mono bg-white px-2 border rounded shadow-sm">{selectedRequest.id}</span></h3>
                   <div className="flex items-center gap-2 mt-1">
@@ -229,7 +236,7 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
                     <StatusBadge status={selectedRequest.status} />
                   </div>
                </div>
-               <button onClick={() => setSelectedRequest(null)} className="p-1 rounded-full hover:bg-slate-200"><X size={20}/></button>
+               <button onClick={() => setSelectedRequest(null)} className="p-1 rounded-full hover:bg-slate-100"><X size={20}/></button>
             </div>
 
             {/* Tabs */}
@@ -243,7 +250,7 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
             </div>
 
             {/* Content Area */}
-            <div className="flex-1 overflow-y-auto p-6 bg-slate-50/30">
+            <div className="flex-1 overflow-y-auto p-6 bg-white">
                {activeTab === 'info' ? (
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in fade-in">
                      {/* Kolom Kiri */}
@@ -312,29 +319,50 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
                      {/* PROCEDURE TAB CONTENT */}
                      {selectedRequest.procedure ? (
                         <>
-                           <div className="flex justify-between items-center mb-4 bg-white p-4 rounded-xl border border-gray-100">
+                           <div className="flex justify-between items-center mb-4 bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
                               <div>
                                  <h4 className="font-bold text-slate-800">Checklist Langkah Pengujian (SOP)</h4>
                                  <p className="text-sm text-slate-500">{selectedRequest.testType}</p>
                               </div>
                               <span className="text-xs font-mono text-slate-500 bg-slate-100 px-2 py-1 rounded">Ver: {selectedRequest.procedure.templateVersion}</span>
                            </div>
+
+                           {/* Status Banner for Pending/Approved */}
+                           {selectedRequest.status !== RequestStatus.IN_PROGRESS && selectedRequest.status !== RequestStatus.COMPLETED && selectedRequest.status !== RequestStatus.DELIVERED && (
+                              <div className="bg-orange-50 border border-orange-100 p-4 rounded-xl flex items-start gap-3 mb-4">
+                                <Info className="text-orange-500 mt-0.5" size={18} />
+                                <div>
+                                  <h5 className="font-bold text-orange-800 text-sm">Prosedur Belum Aktif</h5>
+                                  <p className="text-xs text-orange-700 mt-1">
+                                    Daftar ceklis di bawah masih terkunci. Anda harus mengubah status permintaan menjadi 
+                                    <span className="font-bold"> "Sedang Diuji"</span> terlebih dahulu untuk mulai mengisi hasil pengujian.
+                                  </p>
+                                </div>
+                              </div>
+                           )}
                            
                            <div className="space-y-3">
                               {selectedRequest.procedure.steps.map((step, idx) => {
+                                 // LOGIC FIX: Determine active step with fallback if status is IN_PROGRESS but sync is missing
+                                 const activeStepIndex = selectedRequest.procedure?.steps.findIndex(s => s.status === 'in_progress');
+                                 // If no step is explicitly 'in_progress' but status is IN_PROGRESS, use the first 'pending' step
+                                 const effectiveActiveIndex = activeStepIndex !== -1 && activeStepIndex !== undefined ? activeStepIndex : selectedRequest.procedure?.steps.findIndex(s => s.status === 'pending');
+
                                  const isCompleted = step.status === 'completed';
-                                 const isCurrent = step.status === 'in_progress';
-                                 const isPending = step.status === 'pending';
+                                 // isCurrent is true if explicitly in_progress OR if we are fallback-ing to this index
+                                 const isCurrent = (activeStepIndex !== -1 && step.status === 'in_progress') || (activeStepIndex === -1 && idx === effectiveActiveIndex && selectedRequest.status === RequestStatus.IN_PROGRESS);
+                                 
+                                 const isActive = selectedRequest.status === RequestStatus.IN_PROGRESS || selectedRequest.status === RequestStatus.COMPLETED || selectedRequest.status === RequestStatus.DELIVERED;
                                  
                                  return (
-                                    <div key={step.id} className={`p-4 rounded-xl border transition-all ${isCompleted ? 'bg-green-50 border-green-100' : isCurrent ? 'bg-white border-blue-400 shadow-md ring-1 ring-blue-100' : 'bg-slate-50 border-slate-100 opacity-70'}`}>
+                                    <div key={step.id} className={`p-4 rounded-xl border transition-all ${isCompleted ? 'bg-green-50 border-green-100' : isCurrent ? 'bg-white border-blue-400 shadow-md ring-1 ring-blue-100' : 'bg-white border-slate-200 border-dashed'}`}>
                                        <div className="flex items-start gap-3">
                                           <div className={`mt-0.5 w-6 h-6 rounded-full flex items-center justify-center border ${isCompleted ? 'bg-green-500 text-white border-green-500' : isCurrent ? 'bg-blue-50 text-blue-600 border-blue-500' : 'bg-white text-slate-300 border-slate-300'}`}>
                                              {isCompleted ? <CheckCircle size={14}/> : <span className="text-xs font-bold">{idx + 1}</span>}
                                           </div>
                                           <div className="flex-1">
                                              <div className="flex justify-between">
-                                                <h5 className={`font-bold text-sm ${isCompleted ? 'text-green-800' : 'text-slate-800'}`}>{step.title}</h5>
+                                                <h5 className={`font-bold text-sm ${isCompleted ? 'text-green-800' : isCurrent ? 'text-blue-800' : 'text-slate-500'}`}>{step.title}</h5>
                                                 <span className={`text-xs font-medium px-2 py-0.5 rounded ${step.role === UserRole.ADMIN ? 'bg-purple-50 text-purple-700 border border-purple-100' : 'bg-slate-100 text-slate-500'}`}>{step.role === UserRole.ADMIN ? 'Validasi Admin' : 'Laboran'}</span>
                                              </div>
                                              <p className="text-sm text-slate-600 mt-1">{step.description}</p>
@@ -347,7 +375,7 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
 
                                              {/* Result Area */}
                                              {isCompleted && step.resultData && (
-                                                <div className="mt-3 bg-white/60 p-3 rounded border border-green-100 text-xs text-green-800 shadow-sm">
+                                                <div className="mt-3 bg-white p-3 rounded border border-green-100 text-xs text-green-800 shadow-sm">
                                                    <strong className="block mb-1">Hasil / Catatan:</strong> 
                                                    {step.resultData}
                                                    <div className="mt-2 pt-2 border-t border-green-100 text-green-600 opacity-70 flex items-center gap-1">
@@ -357,11 +385,10 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
                                              )}
 
                                              {/* Action Button for Laboran/Admin */}
-                                             {isCurrent && (
-                                                (user.role === UserRole.LABORAN && step.role === UserRole.LABORAN) || 
-                                                (user.role === UserRole.ADMIN)
+                                             {isCurrent && isActive && (
+                                                (user.role === UserRole.LABORAN || user.role === UserRole.ADMIN)
                                              ) && (
-                                                <button onClick={() => handleStepCompletion(step.id)} className="mt-3 text-xs bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2 transition-colors shadow-sm">
+                                                <button onClick={() => handleStepCompletion(step.id)} className="mt-3 text-xs bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2 transition-colors shadow-sm w-full sm:w-auto justify-center">
                                                    <CheckSquare size={14}/> Tandai Selesai & Input Hasil
                                                 </button>
                                              )}
@@ -373,7 +400,7 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
                            </div>
                         </>
                      ) : (
-                        <div className="text-center py-12 text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                        <div className="text-center py-12 text-slate-400 bg-white rounded-xl border border-dashed border-slate-200">
                            <p>Prosedur standar belum tersedia untuk jenis pengujian ini.</p>
                            {user.role === UserRole.ADMIN && (
                                <p className="text-xs text-blue-600 mt-2">Silakan buat template SOP di menu Manajemen SOP.</p>
@@ -385,10 +412,11 @@ export const RequestList: React.FC<RequestListProps> = ({ user }) => {
             </div>
 
             {/* Footer Buttons */}
-            <div className="p-4 border-t border-gray-100 flex justify-between bg-slate-50 sticky bottom-0">
+            <div className="p-4 border-t border-gray-100 flex justify-between bg-white sticky bottom-0">
                <div>
-                  {/* Action button hanya muncul di tab info untuk trigger perubahan status global */}
-                  {activeTab === 'info' && renderActionButtons()}
+                  {/* Action button hanya muncul di tab info utk trigger perubahan status global, 
+                      kecuali status sudah IN_PROGRESS, tombol selesai ada di atas */}
+                   {renderActionButtons()}
                </div>
                <div className="flex gap-2">
                   <button onClick={() => setSelectedRequest(null)} className="px-4 py-2 bg-white border border-gray-200 text-slate-600 rounded-lg hover:bg-gray-50">Tutup</button>
