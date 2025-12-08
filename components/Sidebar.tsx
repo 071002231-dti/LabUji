@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, PlusCircle, List, Settings, LogOut, FlaskConical, X } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, List, Settings, LogOut, FlaskConical, X, ClipboardList } from 'lucide-react';
 import { UserRole } from '../types';
 
 interface SidebarProps {
@@ -77,6 +77,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ userRole, onLogout, isOpen, on
         {userRole === UserRole.ADMIN && (
           <div>
              <p className="px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Admin</p>
+            <Link to="/admin/procedures" onClick={handleLinkClick} className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${isActive('/admin/procedures')}`}>
+              <ClipboardList size={18} />
+              Manajemen SOP
+            </Link>
             <Link to="/settings" onClick={handleLinkClick} className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${isActive('/settings')}`}>
               <Settings size={18} />
               Pengaturan Lab

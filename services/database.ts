@@ -1,12 +1,13 @@
 
-import { User, UserRole, TestRequest, RequestStatus, RuntimeProcedure } from '../types';
-import { MOCK_REQUESTS as INITIAL_MOCK_REQUESTS, PROCEDURE_TEMPLATES } from '../constants';
+import { User, UserRole, TestRequest, RequestStatus, RuntimeProcedure, ProcedureTemplate } from '../types';
+import { MOCK_REQUESTS as INITIAL_MOCK_REQUESTS, PROCEDURE_TEMPLATES as INITIAL_TEMPLATES } from '../constants';
 
 // KONFIGURASI KONEKSI BACKEND
 const USE_MOCK_DATA = true; 
 const API_BASE_URL = 'http://localhost:8000/api';
 
 let currentRequests: TestRequest[] = [...INITIAL_MOCK_REQUESTS];
+let currentTemplates: ProcedureTemplate[] = [...INITIAL_TEMPLATES];
 
 const SEED_USERS: any[] = [
   { id: 1, name: 'Administrator FTI', email: 'admin@uii.ac.id', password: 'admin', role: UserRole.ADMIN, labId: null },
@@ -84,6 +85,7 @@ export const AuthService = {
 };
 
 export const DataService = {
+  // --- REQUESTS ---
   getRequests: async (token?: string): Promise<TestRequest[]> => {
     if (USE_MOCK_DATA) {
       return new Promise((resolve) => {
@@ -101,7 +103,7 @@ export const DataService = {
         setTimeout(() => {
           // --- LOGIKA PROCEDURE GENERATION ---
           // Saat request dibuat, cek template SOP yang sesuai
-          const template = PROCEDURE_TEMPLATES.find(t => t.serviceName === newRequest.testType);
+          const template = currentTemplates.find(t => t.serviceName === newRequest.testType);
           
           if (template) {
              // Create Snapshot (Runtime Procedure)
@@ -146,7 +148,7 @@ export const DataService = {
     }
   },
 
-  // API Baru: Update Langkah Pengujian (Step)
+  // --- PROCEDURES ---
   updateProcedureStep: async (requestId: string, stepId: number, resultData: string, userName: string): Promise<void> => {
     if (USE_MOCK_DATA) {
         return new Promise((resolve, reject) => {
@@ -178,7 +180,37 @@ export const DataService = {
            }, 500);
         });
     }
-    // Implementasi API Call real akan di sini...
+  },
+
+  // --- TEMPLATES (SOP) CRUD ---
+  getTemplates: async (): Promise<ProcedureTemplate[]> => {
+     if (USE_MOCK_DATA) return new Promise(resolve => setTimeout(() => resolve([...currentTemplates]), 500));
+     return []; // Real API impl needed
+  },
+
+  saveTemplate: async (template: ProcedureTemplate): Promise<void> => {
+    if (USE_MOCK_DATA) {
+        return new Promise(resolve => {
+            setTimeout(() => {
+                const existingIdx = currentTemplates.findIndex(t => t.id === template.id);
+                if (existingIdx !== -1) {
+                    currentTemplates[existingIdx] = template;
+                } else {
+                    currentTemplates.push(template);
+                }
+                resolve();
+            }, 500);
+        });
+    }
+  },
+
+  deleteTemplate: async (id: string): Promise<void> => {
+    if (USE_MOCK_DATA) {
+        return new Promise(resolve => {
+            currentTemplates = currentTemplates.filter(t => t.id !== id);
+            resolve();
+        });
+    }
   }
 };
 
