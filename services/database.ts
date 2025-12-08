@@ -111,6 +111,19 @@ export const DataService = {
     }
   },
 
+  updateUser: async (id: number, userData: any): Promise<void> => {
+    if (USE_MOCK_DATA) {
+        return new Promise(resolve => {
+            const index = currentUsers.findIndex(u => u.id === id);
+            if (index !== -1) {
+                // Merge data lama dengan data baru
+                currentUsers[index] = { ...currentUsers[index], ...userData };
+            }
+            resolve();
+        });
+    }
+  },
+
   deleteUser: async (id: number): Promise<void> => {
     if (USE_MOCK_DATA) {
         return new Promise(resolve => {

@@ -3,13 +3,17 @@ import React, { useState, useEffect } from 'react';
 import { DataService } from '../services/database';
 import { User, UserRole } from '../types';
 import { LABS } from '../constants';
-import { UserPlus, Trash2, Save, X, Users, Settings as SettingsIcon, Shield } from 'lucide-react';
+import { UserPlus, Trash2, Save, X, Users, Settings as SettingsIcon, Shield, Edit } from 'lucide-react';
 
 export const Settings: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'general' | 'users'>('users');
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Edit State
+  const [isEditing, setIsEditing] = useState(false);
+  const [editUserId, setEditUserId] = useState<number | null>(null);
 
   // Form State
   const [newUser, setNewUser] = useState({
@@ -32,23 +36,56 @@ export const Settings: React.FC = () => {
     setIsLoading(false);
   };
 
-  const handleAddUser = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newUser.name || !newUser.email || !newUser.password) return alert("Mohon lengkapi data");
+  const openAddModal = () => {
+      setIsEditing(false);
+      setEditUserId(null);
+      setNewUser({ name: '', email: '', password: '', labId: '', role: UserRole.LABORAN });
+      setIsModalOpen(true);
+  };
 
-    const payload = {
+  const openEditModal = (user: User) => {
+      setIsEditing(true);
+      setEditUserId(user.id);
+      setNewUser({
+          name: user.name,
+          email: user.email,
+          password: '', // Password dikosongkan saat edit (opsional diisi)
+          labId: user.labId ? user.labId.toString() : '',
+          role: user.role
+      });
+      setIsModalOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newUser.name || !newUser.email) return alert("Mohon lengkapi data");
+    
+    // Jika Mode Tambah Baru, password wajib
+    if (!isEditing && !newUser.password) return alert("Password wajib diisi untuk user baru");
+
+    const payload: any = {
         name: newUser.name,
         email: newUser.email,
-        password: newUser.password, // In real app, this goes to backend
         role: newUser.role,
         labId: newUser.role === UserRole.LABORAN ? parseInt(newUser.labId) : undefined
     };
 
-    await DataService.addUser(payload);
+    // Hanya update password jika diisi
+    if (newUser.password) {
+        payload.password = newUser.password;
+    }
+
+    if (isEditing && editUserId) {
+        await DataService.updateUser(editUserId, payload);
+        alert("User berhasil diperbarui!");
+    } else {
+        payload.password = newUser.password; // Pastikan password masuk
+        await DataService.addUser(payload);
+        alert("User berhasil ditambahkan!");
+    }
+
     setIsModalOpen(false);
-    setNewUser({ name: '', email: '', password: '', labId: '', role: UserRole.LABORAN });
     loadUsers();
-    alert("User berhasil ditambahkan!");
   };
 
   const handleDeleteUser = async (id: number) => {
@@ -93,7 +130,7 @@ export const Settings: React.FC = () => {
                   <h3 className="font-bold text-slate-800">Daftar Laboran & Admin</h3>
                   <p className="text-sm text-slate-500">Total {users.length} pengguna terdaftar</p>
                </div>
-               <button onClick={() => setIsModalOpen(true)} className="bg-uii-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2 shadow-sm font-medium transition-colors">
+               <button onClick={openAddModal} className="bg-uii-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2 shadow-sm font-medium transition-colors">
                   <UserPlus size={18} /> Tambah Laboran
                </button>
             </div>
@@ -127,11 +164,16 @@ export const Settings: React.FC = () => {
                               <td className="px-6 py-4 text-slate-600">
                                  {user.labId ? LABS.find(l => l.id === user.labId)?.name : '-'}
                               </td>
-                              <td className="px-6 py-4 text-right">
+                              <td className="px-6 py-4 text-right flex justify-end gap-2">
                                  {user.role !== UserRole.ADMIN && (
-                                     <button onClick={() => handleDeleteUser(user.id)} className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors" title="Hapus User">
-                                        <Trash2 size={16} />
-                                     </button>
+                                     <>
+                                        <button onClick={() => openEditModal(user)} className="text-blue-600 hover:bg-blue-50 p-2 rounded-lg transition-colors" title="Edit User">
+                                            <Edit size={16} />
+                                        </button>
+                                        <button onClick={() => handleDeleteUser(user.id)} className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors" title="Hapus User">
+                                            <Trash2 size={16} />
+                                        </button>
+                                     </>
                                  )}
                               </td>
                            </tr>
@@ -143,16 +185,16 @@ export const Settings: React.FC = () => {
          </div>
       )}
 
-      {/* MODAL TAMBAH USER */}
+      {/* MODAL TAMBAH / EDIT USER */}
       {isModalOpen && (
          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
             <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
                <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-slate-50">
-                  <h3 className="font-bold text-slate-800 text-lg">Tambah Laboran Baru</h3>
+                  <h3 className="font-bold text-slate-800 text-lg">{isEditing ? 'Edit Data Pengguna' : 'Tambah Laboran Baru'}</h3>
                   <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={20}/></button>
                </div>
                
-               <form onSubmit={handleAddUser} className="p-6 space-y-4">
+               <form onSubmit={handleSubmit} className="p-6 space-y-4">
                   <div>
                      <label className="block text-sm font-bold text-slate-700 mb-1">Nama Lengkap</label>
                      <input type="text" required value={newUser.name} onChange={e => setNewUser({...newUser, name: e.target.value})} className={inputClass} placeholder="Contoh: Ahmad Laboran" />
@@ -162,8 +204,8 @@ export const Settings: React.FC = () => {
                      <input type="email" required value={newUser.email} onChange={e => setNewUser({...newUser, email: e.target.value})} className={inputClass} placeholder="nama@uii.ac.id" />
                   </div>
                   <div>
-                     <label className="block text-sm font-bold text-slate-700 mb-1">Password Awal</label>
-                     <input type="text" required value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} className={inputClass} placeholder="Minimal 6 karakter" />
+                     <label className="block text-sm font-bold text-slate-700 mb-1">Password {isEditing && '(Kosongkan jika tidak diubah)'}</label>
+                     <input type="text" required={!isEditing} value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} className={inputClass} placeholder={isEditing ? "Isi untuk ubah password" : "Minimal 6 karakter"} />
                   </div>
                   <div>
                      <label className="block text-sm font-bold text-slate-700 mb-1">Penugasan Lab</label>
@@ -178,7 +220,7 @@ export const Settings: React.FC = () => {
                   <div className="pt-4 flex justify-end gap-3">
                      <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-slate-600 hover:bg-slate-50 rounded-lg border border-gray-200 font-medium">Batal</button>
                      <button type="submit" className="px-6 py-2 bg-uii-blue text-white rounded-lg hover:bg-blue-700 font-bold shadow-md flex items-center gap-2">
-                        <Save size={18} /> Simpan Data
+                        <Save size={18} /> {isEditing ? 'Update User' : 'Simpan Data'}
                      </button>
                   </div>
                </form>
