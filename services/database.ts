@@ -9,16 +9,23 @@ const API_BASE_URL = 'http://localhost:8000/api';
 let currentRequests: TestRequest[] = [...INITIAL_MOCK_REQUESTS];
 let currentTemplates: ProcedureTemplate[] = [...INITIAL_TEMPLATES];
 
-const SEED_USERS: any[] = [
-  { id: 1, name: 'Administrator FTI', email: 'admin@uii.ac.id', password: 'admin', role: UserRole.ADMIN, labId: null },
-  { id: 11, name: 'Laboran Tekstil', email: 'laboran.tekstil@uii.ac.id', password: '123', role: UserRole.LABORAN, labId: 1 },
-  { id: 21, name: 'Laboran Kimia', email: 'laboran.kimia@uii.ac.id', password: '123', role: UserRole.LABORAN, labId: 2 },
-  { id: 31, name: 'Laboran Forensik', email: 'laboran.forensik@uii.ac.id', password: '123', role: UserRole.LABORAN, labId: 3 },
+const SEED_USERS: User[] = [
+  { id: 1, name: 'Administrator FTI', email: 'admin@uii.ac.id', role: UserRole.ADMIN, labId: undefined },
+  { id: 11, name: 'Laboran Tekstil', email: 'laboran.tekstil@uii.ac.id', role: UserRole.LABORAN, labId: 1 },
+  { id: 21, name: 'Laboran Kimia', email: 'laboran.kimia@uii.ac.id', role: UserRole.LABORAN, labId: 2 },
+  { id: 31, name: 'Laboran Forensik', email: 'laboran.forensik@uii.ac.id', role: UserRole.LABORAN, labId: 3 },
   { id: 101, name: 'PT. Tekstil Maju Jaya', email: 'contact@maju-jaya.com', role: UserRole.CUSTOMER },
   { id: 102, name: 'Dinas Lingkungan Hidup', email: 'admin@dlh.gov.id', role: UserRole.CUSTOMER },
   { id: 103, name: 'Kepolisian Daerah DIY', email: 'cybercrime@poldadiy.go.id', role: UserRole.CUSTOMER },
   { id: 104, name: 'CV. Solusi IT', email: 'support@solusiit.com', role: UserRole.CUSTOMER }
 ];
+
+// Extend User type internally to include password for mock auth logic
+interface MockUser extends User {
+  password?: string;
+}
+
+let currentUsers: MockUser[] = SEED_USERS.map(u => ({ ...u, password: u.role === UserRole.ADMIN ? 'admin' : '123' }));
 
 async function apiCall(endpoint: string, method: string = 'GET', body?: any, token?: string) {
   const headers: any = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
@@ -40,7 +47,7 @@ export const AuthService = {
     if (USE_MOCK_DATA) {
       return new Promise((resolve, reject) => {
         setTimeout(() => {
-          const user = SEED_USERS.find(u => u.email === email && u.password === password);
+          const user = currentUsers.find(u => u.email === email && u.password === password);
           if (user) {
             const { password, ...userData } = user;
             resolve(userData as User);
@@ -77,7 +84,7 @@ export const AuthService = {
   },
 
   getCustomerEmail: (userId: number): string => {
-    const user = SEED_USERS.find(u => u.id === userId);
+    const user = currentUsers.find(u => u.id === userId);
     if (user) return user.email;
     if (userId === 999) return 'budi.santoso@gmail.com';
     return 'customer@email.com'; 
@@ -85,6 +92,34 @@ export const AuthService = {
 };
 
 export const DataService = {
+  // --- USERS CRUD ---
+  getUsers: async (): Promise<User[]> => {
+    if (USE_MOCK_DATA) return new Promise(resolve => setTimeout(() => resolve([...currentUsers]), 500));
+    return []; 
+  },
+
+  addUser: async (userData: any): Promise<void> => {
+    if (USE_MOCK_DATA) {
+        return new Promise(resolve => {
+            const newUser: MockUser = {
+                id: Date.now(),
+                ...userData
+            };
+            currentUsers.push(newUser);
+            resolve();
+        });
+    }
+  },
+
+  deleteUser: async (id: number): Promise<void> => {
+    if (USE_MOCK_DATA) {
+        return new Promise(resolve => {
+            currentUsers = currentUsers.filter(u => u.id !== id);
+            resolve();
+        });
+    }
+  },
+
   // --- REQUESTS ---
   getRequests: async (token?: string): Promise<TestRequest[]> => {
     if (USE_MOCK_DATA) {
